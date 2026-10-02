@@ -1,0 +1,35 @@
+server:
+  port: 8080
+  error:
+    # 关闭默认白页,使用自定义 error.html;并在错误页展示具体 message
+    whitelabel:
+      enabled: false
+    include-message: always
+
+spring:
+  application:
+    name: novel
+  datasource:
+    url: jdbc:h2:mem:noveldb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+
+logging:
+  level:
+    org.springframework.security: INFO
+    com.example: DEBUG

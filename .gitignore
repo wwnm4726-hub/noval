@@ -2,4 +2,4 @@ target
 .idea
 agent*
 CLAUDE.md
-**/src/main/resources/application.yml
+*.bak
