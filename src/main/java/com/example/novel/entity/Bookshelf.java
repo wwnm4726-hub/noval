@@ -21,6 +21,10 @@ public class Bookshelf {
     @JoinColumn(name = "novel_id", nullable = false)
     private Novel novel;
 
+    /** 自定义分组名(如「在看 / 想看 / 弃坑」);为空表示未分组。 */
+    @Column(name = "group_name", length = 30)
+    private String groupName;
+
     @Column(name = "added_at", nullable = false)
     private LocalDateTime addedAt = LocalDateTime.now();
 
@@ -39,4 +43,6 @@ public class Bookshelf {
     public void setNovel(Novel novel) { this.novel = novel; }
     public LocalDateTime getAddedAt() { return addedAt; }
     public void setAddedAt(LocalDateTime addedAt) { this.addedAt = addedAt; }
+    public String getGroupName() { return groupName; }
+    public void setGroupName(String groupName) { this.groupName = groupName; }
 }

@@ -86,7 +86,8 @@ public class SecurityConfig {
                                 AntPathRequestMatcher.antMatcher("/error"),
                                 AntPathRequestMatcher.antMatcher("/novels/**"),
                                 AntPathRequestMatcher.antMatcher("/novel/**"),
-                                AntPathRequestMatcher.antMatcher("/chapters/**")
+                                AntPathRequestMatcher.antMatcher("/chapters/**"),
+                                AntPathRequestMatcher.antMatcher("/authors/**")
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

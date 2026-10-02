@@ -50,6 +50,10 @@
             <input type="text" id="category" name="category" maxlength="50" placeholder="如: 玄幻 / 都市 / 修真"
                    th:value="${novel != null} ? ${novel.category} : ''">
 
+            <label for="tags">标签</label>
+            <input type="text" id="tags" name="tags" maxlength="255" placeholder="多个标签用逗号分隔,如: 热血,升级,爽文"
+                   th:value="${novel != null} ? ${novel.tags} : ''">
+
             <label for="status">状态</label>
             <select id="status" name="status">
                 <option value="连载中" th:selected="${novel == null or novel.status == '连载中'}">连载中</option>

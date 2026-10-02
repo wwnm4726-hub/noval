@@ -72,12 +72,14 @@ public class NovelController {
         Integer progressNo = null;
         boolean inBookshelf = false;
         Integer userScore = null;
+        List<String> groupNames = List.of();
         if (user != null) {
             progressNo = progressService.getProgress(user.getId(), id)
                     .map(ReadingProgress::getChapterNo)
                     .orElse(null);
             inBookshelf = bookshelfService.existsInBookshelf(user.getId(), id);
             userScore = ratingService.userScore(user.getId(), id).orElse(null);
+            groupNames = bookshelfService.listGroups(user.getId());
         }
 
         List<CommentView> commentViews = commentService.listViewsByNovel(id, user);
@@ -91,6 +93,7 @@ public class NovelController {
         model.addAttribute("ratingAvg", ratingService.averageScore(id));
         model.addAttribute("ratingCount", ratingService.count(id));
         model.addAttribute("userScore", userScore);
+        model.addAttribute("groupNames", groupNames);
         model.addAttribute("comments", commentViews);
         model.addAttribute("commentCount", commentViews.size());
         return "novel-detail";

@@ -41,6 +41,13 @@
         .btn-remove { width: 100%; padding: 6px; background: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .btn-remove:hover { background: #c0392b; }
 
+        .group-bar { background: #ecf0f1; padding: 8px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 13px; }
+        .group-bar .glabel { color: #7f8c8d; }
+        .group-bar a { color: #34495e; text-decoration: none; padding: 4px 12px; border-radius: 12px; background: #fff; border: 1px solid #d5dbdb; }
+        .group-bar a:hover { background: #dfe6e9; }
+        .group-bar a.active { background: #8e44ad; color: #fff; border-color: #8e44ad; }
+        .group-badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #f4ecf7; color: #8e44ad; margin-bottom: 6px; }
+
         .empty { background: #fff; padding: 60px 20px; border-radius: 8px; text-align: center; color: #7f8c8d; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
         .empty a { color: #e74c3c; text-decoration: none; font-weight: bold; }
 
@@ -61,6 +68,16 @@
         <a th:href="@{/}" class="btn-home">去首页逛逛</a>
     </div>
 
+    <div class="group-bar" th:if="${!#lists.isEmpty(groups) or hasUngrouped}">
+        <span class="glabel">分组:</span>
+        <a th:href="@{/bookshelf}" th:classappend="${activeGroup == null or activeGroup == ''} ? 'active' : ''">全部</a>
+        <a th:if="${hasUngrouped}" th:href="@{/bookshelf(group='ungrouped')}"
+           th:classappend="${activeGroup == 'ungrouped'} ? 'active' : ''">未分组</a>
+        <a th:each="g : ${groups}" th:href="@{/bookshelf(group=${g})}"
+           th:text="${g}"
+           th:classappend="${activeGroup == g} ? 'active' : ''">分组</a>
+    </div>
+
     <div th:if="${#lists.isEmpty(items)}" class="empty">
         <p style="font-size: 18px; margin-bottom: 12px;">📚 书架空空如也</p>
         <p>还没有收藏任何小说,去 <a th:href="@{/}">首页</a> 找点好书吧!</p>
@@ -73,17 +90,19 @@
                      th:src="${it.novel.cover != null and it.novel.cover != ''} ? ${it.novel.cover} : 'https://placehold.co/200x240/95a5a6/ffffff?text=No+Cover'"
                      th:alt="${it.novel.title}">
                 <div class="card-body">
+                    <div class="group-badge" th:if="${it.groupName != null}"
+                         th:text="'📁 ' + ${it.groupName}">分组</div>
                     <div class="card-title" th:text="${it.novel.title}">书名</div>
                     <div class="card-author" th:text="${'作者: ' + it.novel.author}">作者</div>
 
                     <div class="progress-badge started" th:if="${it.started}"
-                         th:text="'读到第 ' + ${it.progressChapterNo} + ' 章 / 共 ' + ${it.chapterTotal} + ' 章'">
-                        读到第 2 章 / 共 3 章
+                         th:text="'读到第 ' + ${it.progressChapterNo} + ' 章 / 共 ' + ${it.chapterTotal} + ' 章 (' + ${it.progressPercent} + '%)'">
+                        读到第 2 章 / 共 3 章 (67%)
                     </div>
                     <div class="progress-badge none" th:unless="${it.started}">尚未开始阅读</div>
 
                     <div class="progress-bar" th:if="${it.started and it.chapterTotal > 0}">
-                        <span th:style="'width:' + ${(it.progressChapterNo * 100 / it.chapterTotal)} + '%'"></span>
+                        <span th:style="'width:' + ${it.progressPercent} + '%'"></span>
                     </div>
                 </div>
             </a>

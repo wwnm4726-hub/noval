@@ -29,6 +29,10 @@ public class Novel {
     @Column(length = 50)
     private String category;
 
+    /** 标签: 逗号分隔(如 "热血,升级,爽文")。 */
+    @Column(length = 255)
+    private String tags;
+
     @Column(length = 20)
     private String status = "连载中";
 
@@ -69,6 +73,8 @@ public class Novel {
     public void setDescription(String description) { this.description = description; }
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+    public String getTags() { return tags; }
+    public void setTags(String tags) { this.tags = tags; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public Long getViewCount() { return viewCount; }
@@ -83,5 +89,17 @@ public class Novel {
     public void addChapter(Chapter c) {
         chapters.add(c);
         c.setNovel(this);
+    }
+
+    /** 标签列表: 拆分逗号、去空格与空项并去重。 */
+    public List<String> getTagList() {
+        if (tags == null || tags.isBlank()) {
+            return List.of();
+        }
+        return java.util.Arrays.stream(tags.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .distinct()
+                .toList();
     }
 }

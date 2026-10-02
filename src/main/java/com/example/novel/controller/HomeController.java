@@ -21,10 +21,11 @@ public class HomeController {
     public String index(@RequestParam(value = "category", required = false) String category,
                         @RequestParam(value = "keyword", required = false) String keyword,
                         @RequestParam(value = "sort", required = false, defaultValue = "new") String sort,
+                        @RequestParam(value = "tag", required = false) String tag,
                         @RequestParam(value = "page", required = false, defaultValue = "1") int page,
                         @RequestParam(value = "size", required = false, defaultValue = "12") int size,
                         Model model) {
-        PageResult<Novel> result = novelService.page(category, keyword, sort, page, size);
+        PageResult<Novel> result = novelService.page(category, keyword, sort, tag, page, size);
         if (keyword != null && !keyword.isBlank()) {
             model.addAttribute("keyword", keyword);
             model.addAttribute("activeCategory", null);
@@ -40,6 +41,8 @@ public class HomeController {
         model.addAttribute("hasPrev", result.hasPrev());
         model.addAttribute("hasNext", result.hasNext());
         model.addAttribute("categories", novelService.allCategories());
+        model.addAttribute("tags", novelService.allTags());
+        model.addAttribute("activeTag", tag);
         model.addAttribute("sort", sort);
         return "home";
     }

@@ -23,6 +23,9 @@
         .detail-meta span { margin-right: 16px; }
         .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-right: 6px; }
         .tag-cat { background: #ecf0f1; color: #34495e; }
+        .tag-link { background: #e8f6f3; color: #16a085; text-decoration: none; }
+        .tag-link:hover { background: #16a085; color: #fff; }
+        .detail-tags { margin: 6px 0 4px; }
         .tag-status { background: #27ae60; color: #fff; }
         .tag-status.done { background: #95a5a6; }
         .detail-desc { background: #fafafa; padding: 14px; border-radius: 6px; line-height: 1.8; color: #555; margin: 12px 0; font-size: 14px; }
@@ -109,18 +112,30 @@
         <div class="detail-info">
             <h1 class="detail-title" th:text="${novel.title}">书名</h1>
             <div class="detail-meta">
-                <span>👤 作者: <strong th:text="${novel.author}">作者</strong></span>
+                <span>👤 作者: <a th:href="@{/authors/{name}(name=${novel.author})}"
+                                 style="color:#2980b9;text-decoration:none;font-weight:bold"
+                                 th:text="${novel.author}">作者</a></span>
                 <span>📚 共 <strong th:text="${chapterTotal}">0</strong> 章</span>
                 <span>👁 <strong th:text="${novel.viewCount}">0</strong> 次浏览</span>
                 <span>📖 追更 <strong th:text="${bookshelfCount}">0</strong> 人</span>
                 <span>⭐ <strong th:text="${ratingCount > 0} ? ${ratingAvg} : '暂无评分'">暂无评分</strong><span
                         th:if="${ratingCount > 0}" th:text="' (' + ${ratingCount} + ' 人评分)'"></span></span>
+                <span th:if="${progressNo != null and chapterTotal > 0}">📊 阅读进度 <strong
+                        th:text="${progressNo * 100 / chapterTotal} + '%'">0%</strong></span>
                 <span th:if="${novel.updatedAt != null}">🕒 最近更新 <strong
                         th:text="${#temporals.format(novel.updatedAt, 'yyyy-MM-dd HH:mm')}">时间</strong></span>
                 <span class="tag tag-cat" th:text="${novel.category}">分类</span>
                 <span class="tag tag-status"
                       th:classappend="${novel.status == '已完结'} ? 'done' : ''"
                       th:text="${novel.status}">状态</span>
+            </div>
+
+            <!-- 标签 -->
+            <div class="detail-tags" th:if="${!#lists.isEmpty(novel.tagList)}">
+                <span style="color:#7f8c8d;font-size:13px">🏷 标签:</span>
+                <a th:each="t : ${novel.tagList}"
+                   th:href="@{/(tag=${t})}"
+                   class="tag tag-link" th:text="${t}">标签</a>
             </div>
 
             <div class="detail-desc" th:text="${novel.description}">简介</div>
@@ -172,8 +187,14 @@
                     <button type="submit" class="btn btn-outline">✓ 已在书架 · 移出</button>
                 </form>
                 <form sec:authorize="isAuthenticated()" th:unless="${inBookshelf}"
-                      th:action="@{/bookshelf/add}" method="post" style="display:inline">
+                      th:action="@{/bookshelf/add}" method="post" style="display:inline-flex;gap:6px;align-items:center">
                     <input type="hidden" name="novelId" th:value="${novel.id}">
+                    <input type="text" name="groupName" list="group-options" maxlength="30"
+                           placeholder="分组(可选)"
+                           style="padding:7px 10px;border:1px solid #bdc3c7;border-radius:4px;font-size:14px;width:130px">
+                    <datalist id="group-options">
+                        <option th:each="g : ${groupNames}" th:value="${g}"></option>
+                    </datalist>
                     <button type="submit" class="btn btn-success">＋ 加入书架</button>
                 </form>
                 <!-- 未登录: 引导登录 -->

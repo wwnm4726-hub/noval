@@ -18,6 +18,9 @@
         .reader-tools { display: flex; align-items: center; gap: 8px; }
         .reader-tools button { background: #2c3e50; color: #fff; border: 1px solid #4a6278; border-radius: 4px; cursor: pointer; padding: 4px 10px; font-size: 14px; }
         .reader-tools button:hover { background: #1a252f; }
+        .reader-tools select { background: #2c3e50; color: #fff; border: 1px solid #4a6278; border-radius: 4px; cursor: pointer; padding: 4px 6px; font-size: 13px; }
+        .reader-progress { height: 4px; background: #2c3e50; }
+        .reader-progress > span { display: block; height: 100%; background: #e67e22; transition: width .3s; }
 
         .container { max-width: 800px; margin: 24px auto; background: #fff; padding: 36px 48px; border-radius: 8px;
                      box-shadow: 0 2px 8px rgba(0,0,0,.06); transition: background .2s, color .2s; }
@@ -89,8 +92,29 @@
         <span th:text="'第 ' + chapter.chapterNo + ' / 共 ' + ${chapterTotal} + ' 章'" style="margin-right:8px">第 1 / 共 N 章</span>
         <button type="button" id="font-dec" title="缩小字号">A-</button>
         <button type="button" id="font-inc" title="放大字号">A+</button>
+        <select id="line-height" title="行距">
+            <option value="1.6">行距·紧凑</option>
+            <option value="2.0">行距·标准</option>
+            <option value="2.6">行距·宽松</option>
+        </select>
+        <select id="page-width" title="内容区宽度">
+            <option value="680">页宽·窄</option>
+            <option value="800">页宽·标准</option>
+            <option value="1000">页宽·宽</option>
+        </select>
+        <select id="font-family" title="正文字体">
+            <option value="default">字体·默认</option>
+            <option value="song">宋体</option>
+            <option value="hei">黑体</option>
+            <option value="kai">楷体</option>
+        </select>
         <button type="button" id="night-toggle" title="切换夜间模式">🌙 夜间</button>
     </div>
+</div>
+
+<!-- 阅读进度条 -->
+<div class="reader-progress" th:if="${chapterTotal > 0}" th:title="'阅读进度 ' + ${(chapter.chapterNo * 100 / chapterTotal)} + '%'">
+    <span th:style="'width:' + ${(chapter.chapterNo * 100 / chapterTotal)} + '%'"></span>
 </div>
 
 <div class="container">
@@ -161,24 +185,56 @@
 <script th:inline="javascript">
     (function () {
         var content = document.querySelector('.chapter-content');
+        var container = document.querySelector('.container');
+        var commentSection = document.querySelector('.comment-section');
         var KEY_SIZE = 'reader_font_size';
         var KEY_NIGHT = 'reader_night';
+        var KEY_LINE = 'reader_line_height';
+        var KEY_WIDTH = 'reader_page_width';
+        var KEY_FONT = 'reader_font_family';
         var MIN = 14, MAX = 32;
+
+        var FONT_FAMILIES = {
+            'default': '"Microsoft YaHei", "PingFang SC", sans-serif',
+            'song': 'SimSun, "Songti SC", serif',
+            'hei': 'SimHei, "Heiti SC", sans-serif',
+            'kai': 'KaiTi, "Kaiti SC", serif'
+        };
 
         var size = parseInt(localStorage.getItem(KEY_SIZE) || '18', 10);
         if (isNaN(size) || size < MIN || size > MAX) { size = 18; }
         var night = localStorage.getItem(KEY_NIGHT) === '1';
+        var lineHeight = localStorage.getItem(KEY_LINE) || '2.0';
+        var pageWidth = localStorage.getItem(KEY_WIDTH) || '800';
+        var fontFamily = localStorage.getItem(KEY_FONT) || 'default';
+        if (!FONT_FAMILIES.hasOwnProperty(fontFamily)) { fontFamily = 'default'; }
 
         var nightBtn = document.getElementById('night-toggle');
+        var lineSelect = document.getElementById('line-height');
+        var widthSelect = document.getElementById('page-width');
+        var fontSelect = document.getElementById('font-family');
 
         function applySize() { if (content) { content.style.fontSize = size + 'px'; } }
         function applyNight() {
             document.body.classList.toggle('night', night);
             if (nightBtn) { nightBtn.textContent = night ? '☀️ 日间' : '🌙 夜间'; }
         }
+        function applyLineHeight() { if (content) { content.style.lineHeight = lineHeight; } }
+        function applyPageWidth() {
+            if (container) { container.style.maxWidth = pageWidth + 'px'; }
+            if (commentSection) { commentSection.style.maxWidth = pageWidth + 'px'; }
+        }
+        function applyFontFamily() { if (content) { content.style.fontFamily = FONT_FAMILIES[fontFamily]; } }
+
+        if (lineSelect) { lineSelect.value = lineHeight; }
+        if (widthSelect) { widthSelect.value = pageWidth; }
+        if (fontSelect) { fontSelect.value = fontFamily; }
 
         applySize();
         applyNight();
+        applyLineHeight();
+        applyPageWidth();
+        applyFontFamily();
 
         document.getElementById('font-dec').addEventListener('click', function () {
             if (size > MIN) { size -= 2; localStorage.setItem(KEY_SIZE, String(size)); applySize(); }
@@ -191,6 +247,27 @@
             localStorage.setItem(KEY_NIGHT, night ? '1' : '0');
             applyNight();
         });
+        if (lineSelect) {
+            lineSelect.addEventListener('change', function () {
+                lineHeight = lineSelect.value;
+                localStorage.setItem(KEY_LINE, lineHeight);
+                applyLineHeight();
+            });
+        }
+        if (widthSelect) {
+            widthSelect.addEventListener('change', function () {
+                pageWidth = widthSelect.value;
+                localStorage.setItem(KEY_WIDTH, pageWidth);
+                applyPageWidth();
+            });
+        }
+        if (fontSelect) {
+            fontSelect.addEventListener('change', function () {
+                fontFamily = fontSelect.value;
+                localStorage.setItem(KEY_FONT, fontFamily);
+                applyFontFamily();
+            });
+        }
     })();
 </script>
 

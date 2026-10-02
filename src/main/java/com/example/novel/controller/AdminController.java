@@ -131,10 +131,12 @@ public class AdminController {
                               @RequestParam(required = false) String cover,
                               @RequestParam(required = false) String description,
                               @RequestParam(required = false) String category,
+                              @RequestParam(required = false) String tags,
                               @RequestParam(defaultValue = "连载中") String status,
                               RedirectAttributes ra) {
         try {
             Novel novel = new Novel(title, author, cover, description, category, status);
+            novel.setTags(tags);
             Novel saved = novelService.saveNovel(novel);
             ra.addFlashAttribute("message", "已新增小说《" + saved.getTitle() + "》");
             return "redirect:/admin/novels";
@@ -160,6 +162,7 @@ public class AdminController {
                               @RequestParam(required = false) String cover,
                               @RequestParam(required = false) String description,
                               @RequestParam(required = false) String category,
+                              @RequestParam(required = false) String tags,
                               @RequestParam(defaultValue = "连载中") String status,
                               RedirectAttributes ra) {
         Novel novel = novelService.findById(id)
@@ -169,6 +172,7 @@ public class AdminController {
         novel.setCover(cover);
         novel.setDescription(description);
         novel.setCategory(category);
+        novel.setTags(tags);
         novel.setStatus(status);
         try {
             novelService.saveNovel(novel);

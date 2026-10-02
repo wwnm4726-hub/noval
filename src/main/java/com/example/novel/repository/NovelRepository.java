@@ -18,6 +18,8 @@ public interface NovelRepository extends JpaRepository<Novel, Long> {
 
     List<Novel> findAllByOrderByCreatedAtDesc();
 
+    List<Novel> findByAuthorOrderByCreatedAtDesc(String author);
+
     List<Novel> findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(String title, String author);
 
     // 热门排序: 按浏览量倒序

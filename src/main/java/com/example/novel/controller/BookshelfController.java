@@ -43,32 +43,44 @@ public class BookshelfController {
 
     @GetMapping("/bookshelf")
     public String view(@AuthenticationPrincipal UserDetails principal,
+                       @RequestParam(value = "group", required = false) String group,
                        Model model) {
         User user = currentUserService.require(principal);
 
         Map<Long, ReadingProgress> progressByNovel = progressService.listHistory(user.getId()).stream()
                 .collect(Collectors.toMap(p -> p.getNovel().getId(), Function.identity(), (a, b) -> a));
 
-        List<BookshelfItem> items = bookshelfService.listEntries(user.getId()).stream()
+        List<BookshelfItem> all = bookshelfService.listEntries(user.getId()).stream()
                 .map(entry -> toItem(entry, progressByNovel))
                 .sorted(Comparator.comparing(
                         BookshelfItem::getLastReadAt,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
 
+        boolean ungrouped = "ungrouped".equals(group);
+        List<BookshelfItem> items = all.stream()
+                .filter(it -> group == null || group.isBlank()
+                        || (ungrouped ? it.getGroupName() == null
+                                      : group.equals(it.getGroupName())))
+                .toList();
+
         model.addAttribute("currentUsername", user.getUsername());
         model.addAttribute("items", items);
-        model.addAttribute("bookshelfCount", items.size());
+        model.addAttribute("bookshelfCount", all.size());
+        model.addAttribute("groups", bookshelfService.listGroups(user.getId()));
+        model.addAttribute("hasUngrouped", all.stream().anyMatch(it -> it.getGroupName() == null));
+        model.addAttribute("activeGroup", group);
         return "bookshelf";
     }
 
     @PostMapping("/bookshelf/add")
     public String add(@RequestParam("novelId") Long novelId,
+                      @RequestParam(value = "groupName", required = false) String groupName,
                       @AuthenticationPrincipal UserDetails principal,
                       RedirectAttributes redirectAttributes) {
         User user = currentUserService.require(principal);
         try {
-            bookshelfService.addToBookshelf(user.getId(), novelId);
+            bookshelfService.addToBookshelf(user.getId(), novelId, groupName);
             redirectAttributes.addFlashAttribute("bookshelfAdded", true);
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("bookshelfError", ex.getMessage());
@@ -92,6 +104,7 @@ public class BookshelfController {
                 entry.getNovel(),
                 progress == null ? null : progress.getChapterNo(),
                 total,
-                progress == null ? null : progress.getUpdatedAt());
+                progress == null ? null : progress.getUpdatedAt(),
+                entry.getGroupName());
     }
 }

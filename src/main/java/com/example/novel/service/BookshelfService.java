@@ -57,7 +57,24 @@ public class BookshelfService {
         return bookshelfRepository.countByUserId(userId);
     }
 
-    public void addToBookshelf(Long userId, Long novelId) {
+    /** 我已有的自定义分组名(去空、去重、排序)。 */
+    @Transactional(readOnly = true)
+    public List<String> listGroups(Long userId) {
+        return bookshelfRepository.findByUserId(userId).stream()
+                .map(Bookshelf::getGroupName)
+                .filter(g -> g != null && !g.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 加入书架(幂等)。
+     *
+     * @param groupName 分组名,留空表示未分组
+     * @throws IllegalArgumentException 用户或小说不存在
+     */
+    public void addToBookshelf(Long userId, Long novelId, String groupName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
         Novel novel = novelRepository.findById(novelId)
@@ -66,7 +83,10 @@ public class BookshelfService {
         if (bookshelfRepository.existsByUserIdAndNovelId(userId, novelId)) {
             return; // 幂等: 不重复添加
         }
-        bookshelfRepository.save(new Bookshelf(user, novel));
+        Bookshelf entry = new Bookshelf(user, novel);
+        String g = groupName == null ? null : groupName.trim();
+        entry.setGroupName(g == null || g.isEmpty() ? null : g);
+        bookshelfRepository.save(entry);
     }
 
     public void removeFromBookshelf(Long userId, Long novelId) {

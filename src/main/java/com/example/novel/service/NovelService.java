@@ -84,13 +84,39 @@ public class NovelService {
     }
 
     /**
-     * 分页后的列表(保留分类/关键词/排序筛选),页码越界时自动收敛到有效范围。
+     * 分页后的列表(保留分类/关键词/排序/标签筛选),页码越界时自动收敛到有效范围。
      */
-    public PageResult<Novel> page(String category, String keyword, String sort, int page, int size) {
+    public PageResult<Novel> page(String category, String keyword, String sort, String tag,
+                                  int page, int size) {
         List<Novel> all = (keyword != null && !keyword.isBlank())
                 ? search(keyword, sort)
                 : listByCategory(category, sort);
-        return PageResult.of(all, page, size);
+        return PageResult.of(filterByTag(all, tag), page, size);
+    }
+
+    /** 全部标签(去重、排序),用于首页/搜索的标签筛选条。 */
+    public List<String> allTags() {
+        return novelRepository.findAll().stream()
+                .flatMap(n -> n.getTagList().stream())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    /** 某作者的全部作品,按上架时间倒序。 */
+    public List<Novel> listByAuthor(String author) {
+        if (author == null || author.isBlank()) {
+            return List.of();
+        }
+        return novelRepository.findByAuthorOrderByCreatedAtDesc(author.trim());
+    }
+
+    private List<Novel> filterByTag(List<Novel> novels, String tag) {
+        if (tag == null || tag.isBlank()) {
+            return novels;
+        }
+        String t = tag.trim();
+        return novels.stream().filter(n -> n.getTagList().contains(t)).toList();
     }
 
     public List<String> allCategories() {
