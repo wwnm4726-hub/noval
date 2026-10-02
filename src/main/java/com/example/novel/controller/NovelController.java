@@ -11,6 +11,7 @@ import com.example.novel.service.ChapterService;
 import com.example.novel.service.CommentService;
 import com.example.novel.service.CurrentUserService;
 import com.example.novel.service.NovelService;
+import com.example.novel.service.RatingService;
 import com.example.novel.service.ReadingProgressService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -35,6 +36,7 @@ public class NovelController {
     private final CommentService commentService;
     private final ReadingProgressService progressService;
     private final BookshelfService bookshelfService;
+    private final RatingService ratingService;
     private final CurrentUserService currentUserService;
 
     public NovelController(NovelService novelService,
@@ -42,12 +44,14 @@ public class NovelController {
                            CommentService commentService,
                            ReadingProgressService progressService,
                            BookshelfService bookshelfService,
+                           RatingService ratingService,
                            CurrentUserService currentUserService) {
         this.novelService = novelService;
         this.chapterService = chapterService;
         this.commentService = commentService;
         this.progressService = progressService;
         this.bookshelfService = bookshelfService;
+        this.ratingService = ratingService;
         this.currentUserService = currentUserService;
     }
 
@@ -68,11 +72,13 @@ public class NovelController {
         User user = currentUserService.find(principal);
         Integer progressNo = null;
         boolean inBookshelf = false;
+        Integer userScore = null;
         if (user != null) {
             progressNo = progressService.getProgress(user.getId(), id)
                     .map(ReadingProgress::getChapterNo)
                     .orElse(null);
             inBookshelf = bookshelfService.existsInBookshelf(user.getId(), id);
+            userScore = ratingService.userScore(user.getId(), id).orElse(null);
         }
 
         List<Comment> comments = commentService.listByNovel(id);
@@ -85,9 +91,29 @@ public class NovelController {
         model.addAttribute("chapterTotal", chapterTotal);
         model.addAttribute("progressNo", progressNo);
         model.addAttribute("inBookshelf", inBookshelf);
+        model.addAttribute("bookshelfCount", bookshelfService.countByNovel(id));
+        model.addAttribute("ratingAvg", ratingService.averageScore(id));
+        model.addAttribute("ratingCount", ratingService.count(id));
+        model.addAttribute("userScore", userScore);
         model.addAttribute("comments", commentViews);
         model.addAttribute("commentCount", commentViews.size());
         return "novel-detail";
+    }
+
+    /** 详情页打分(表单提交,需登录;一人一评,重复提交覆盖)。 */
+    @PostMapping("/novels/{id}/rating")
+    public String rate(@PathVariable("id") Long id,
+                       @RequestParam("score") Integer score,
+                       @AuthenticationPrincipal UserDetails principal,
+                       RedirectAttributes ra) {
+        User user = currentUserService.require(principal);
+        try {
+            ratingService.rate(user.getId(), id, score);
+            ra.addFlashAttribute("ratingMessage", "评分成功");
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("ratingError", ex.getMessage());
+        }
+        return "redirect:/novels/" + id;
     }
 
     /** 详情页发表评论(表单提交)。 */

@@ -1,8 +1,10 @@
 package com.example.novel.service;
 
 import com.example.novel.entity.Novel;
+import com.example.novel.repository.BookshelfRepository;
 import com.example.novel.repository.CommentRepository;
 import com.example.novel.repository.NovelRepository;
+import com.example.novel.repository.RatingRepository;
 import com.example.novel.repository.ReadingProgressRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,20 +26,38 @@ public class NovelService {
 
     /** 首页排序方式常量。 */
     public static final String SORT_HOT = "hot";
+    public static final String SORT_UPDATE = "update";
+    public static final String SORT_RATING = "rating";
+    public static final String SORT_COLLECT = "collect";
 
     private final NovelRepository novelRepository;
     private final CommentRepository commentRepository;
     private final ReadingProgressRepository progressRepository;
+    private final RatingRepository ratingRepository;
+    private final BookshelfRepository bookshelfRepository;
 
     public NovelService(NovelRepository novelRepository,
                         CommentRepository commentRepository,
-                        ReadingProgressRepository progressRepository) {
+                        ReadingProgressRepository progressRepository,
+                        RatingRepository ratingRepository,
+                        BookshelfRepository bookshelfRepository) {
         this.novelRepository = novelRepository;
         this.commentRepository = commentRepository;
         this.progressRepository = progressRepository;
+        this.ratingRepository = ratingRepository;
+        this.bookshelfRepository = bookshelfRepository;
     }
 
     public List<Novel> listAll(String sort) {
+        if (SORT_UPDATE.equalsIgnoreCase(sort)) {
+            return novelRepository.findAllByOrderByUpdatedAtDesc();
+        }
+        if (SORT_RATING.equalsIgnoreCase(sort)) {
+            return novelRepository.findSortedByRating(null, null);
+        }
+        if (SORT_COLLECT.equalsIgnoreCase(sort)) {
+            return novelRepository.findSortedByCollect(null, null);
+        }
         if (SORT_HOT.equalsIgnoreCase(sort)) {
             return novelRepository.findAllByOrderByViewCountDesc();
         }
@@ -47,6 +67,15 @@ public class NovelService {
     public List<Novel> listByCategory(String category, String sort) {
         if (category == null || category.isBlank()) {
             return listAll(sort);
+        }
+        if (SORT_UPDATE.equalsIgnoreCase(sort)) {
+            return novelRepository.findByCategoryOrderByUpdatedAtDesc(category);
+        }
+        if (SORT_RATING.equalsIgnoreCase(sort)) {
+            return novelRepository.findSortedByRating(category, null);
+        }
+        if (SORT_COLLECT.equalsIgnoreCase(sort)) {
+            return novelRepository.findSortedByCollect(category, null);
         }
         if (SORT_HOT.equalsIgnoreCase(sort)) {
             return novelRepository.findByCategoryOrderByViewCountDesc(category);
@@ -70,6 +99,16 @@ public class NovelService {
     public List<Novel> search(String keyword, String sort) {
         if (keyword == null || keyword.isBlank()) {
             return listAll(sort);
+        }
+        if (SORT_UPDATE.equalsIgnoreCase(sort)) {
+            return novelRepository
+                    .findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCaseOrderByUpdatedAtDesc(keyword, keyword);
+        }
+        if (SORT_RATING.equalsIgnoreCase(sort)) {
+            return novelRepository.findSortedByRating(null, keyword);
+        }
+        if (SORT_COLLECT.equalsIgnoreCase(sort)) {
+            return novelRepository.findSortedByCollect(null, keyword);
         }
         if (SORT_HOT.equalsIgnoreCase(sort)) {
             return novelRepository
@@ -105,6 +144,8 @@ public class NovelService {
                 .orElseThrow(() -> new IllegalArgumentException("小说不存在"));
         commentRepository.deleteByNovelId(id);
         progressRepository.deleteByNovelId(id);
+        ratingRepository.deleteByNovelId(id);
+        bookshelfRepository.deleteByNovelId(id);
         novelRepository.delete(novel);
         log.info("删除小说 id={}, title={} (含其评论/进度/章节)", id, novel.getTitle());
     }

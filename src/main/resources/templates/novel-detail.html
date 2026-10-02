@@ -26,6 +26,11 @@
         .tag-status { background: #27ae60; color: #fff; }
         .tag-status.done { background: #95a5a6; }
         .detail-desc { background: #fafafa; padding: 14px; border-radius: 6px; line-height: 1.8; color: #555; margin: 12px 0; font-size: 14px; }
+        .rating-box { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; color: #555; margin-bottom: 4px; }
+        .rating-box .rating-label { color: #7f8c8d; }
+        .rating-box select { padding: 7px 10px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 14px; }
+        .rating-box a { color: #e74c3c; }
+        .rating-note { color: #e67e22; font-size: 13px; }
         .detail-actions { margin-top: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .btn { padding: 8px 18px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
         .btn-primary { background: #e74c3c; color: #fff; }
@@ -82,6 +87,8 @@
 
     <div class="flash ok" th:if="${bookshelfAdded}">已加入书架。</div>
     <div class="flash err" th:if="${bookshelfError}" th:text="${bookshelfError}">加入失败</div>
+    <div class="flash ok" th:if="${ratingMessage}" th:text="${ratingMessage}">评分成功</div>
+    <div class="flash err" th:if="${ratingError}" th:text="${ratingError}">评分失败</div>
 
     <div class="detail-header">
         <img class="detail-cover"
@@ -93,6 +100,11 @@
                 <span>👤 作者: <strong th:text="${novel.author}">作者</strong></span>
                 <span>📚 共 <strong th:text="${chapterTotal}">0</strong> 章</span>
                 <span>👁 <strong th:text="${novel.viewCount}">0</strong> 次浏览</span>
+                <span>📖 追更 <strong th:text="${bookshelfCount}">0</strong> 人</span>
+                <span>⭐ <strong th:text="${ratingCount > 0} ? ${ratingAvg} : '暂无评分'">暂无评分</strong><span
+                        th:if="${ratingCount > 0}" th:text="' (' + ${ratingCount} + ' 人评分)'"></span></span>
+                <span th:if="${novel.updatedAt != null}">🕒 最近更新 <strong
+                        th:text="${#temporals.format(novel.updatedAt, 'yyyy-MM-dd HH:mm')}">时间</strong></span>
                 <span class="tag tag-cat" th:text="${novel.category}">分类</span>
                 <span class="tag tag-status"
                       th:classappend="${novel.status == '已完结'} ? 'done' : ''"
@@ -100,6 +112,24 @@
             </div>
 
             <div class="detail-desc" th:text="${novel.description}">简介</div>
+
+            <div class="rating-box">
+                <span class="rating-label">我的评分:</span>
+                <form sec:authorize="isAuthenticated()"
+                      th:action="@{/novels/{id}/rating(id=${novel.id})}" method="post" style="display:inline">
+                    <select name="score" required>
+                        <option value="5" th:selected="${userScore == 5}">★★★★★ 5 星</option>
+                        <option value="4" th:selected="${userScore == 4}">★★★★☆ 4 星</option>
+                        <option value="3" th:selected="${userScore == 3}">★★★☆☆ 3 星</option>
+                        <option value="2" th:selected="${userScore == 2}">★★☆☆☆ 2 星</option>
+                        <option value="1" th:selected="${userScore == 1}">★☆☆☆☆ 1 星</option>
+                    </select>
+                    <button type="submit" class="btn btn-secondary">提交评分</button>
+                </form>
+                <a sec:authorize="!isAuthenticated()" th:href="@{/login}">登录后可评分</a>
+                <span class="rating-note" th:if="${userScore != null}"
+                      th:text="'你已评 ' + ${userScore} + ' 星,可重新提交修改'"></span>
+            </div>
 
             <div class="detail-actions">
                 <!-- 继续阅读: 有进度时优先展示 -->

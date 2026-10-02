@@ -20,4 +20,10 @@ public interface BookshelfRepository extends JpaRepository<Bookshelf, Long> {
     long deleteByUserIdAndNovelId(Long userId, Long novelId);
 
     boolean existsByUserAndNovel(User user, Novel novel);
+
+    long countByUserId(Long userId);
+
+    long countByNovelId(Long novelId);
+
+    long deleteByNovelId(Long novelId);
 }

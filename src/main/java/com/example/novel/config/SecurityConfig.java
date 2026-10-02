@@ -45,6 +45,8 @@ public class SecurityConfig {
                         // 详情页评论写操作(表单): 需登录(未登录跳登录页)
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/novels/*/comments")).authenticated()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/novels/*/comments/*/delete")).authenticated()
+                        // 详情页打分(表单): 需登录
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/novels/*/rating")).authenticated()
                         // 评论写操作(API): 需登录
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/novels/*/comments")).authenticated()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.DELETE, "/api/comments/**")).authenticated()

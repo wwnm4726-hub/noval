@@ -45,6 +45,18 @@ public class BookshelfService {
         return bookshelfRepository.existsByUserIdAndNovelId(userId, novelId);
     }
 
+    /** 追更人数: 某小说的书架收藏数。 */
+    @Transactional(readOnly = true)
+    public long countByNovel(Long novelId) {
+        return bookshelfRepository.countByNovelId(novelId);
+    }
+
+    /** 我在书架中的藏书数。 */
+    @Transactional(readOnly = true)
+    public long countByUser(Long userId) {
+        return bookshelfRepository.countByUserId(userId);
+    }
+
     public void addToBookshelf(Long userId, Long novelId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("用户不存在"));

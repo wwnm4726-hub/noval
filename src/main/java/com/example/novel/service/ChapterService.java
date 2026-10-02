@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -97,6 +98,8 @@ public class ChapterService {
             chapter.setTitle(title.trim());
             chapter.setContent(content);
         }
+        // 章节新增/修改视为这本书的"最近更新",用于首页「最近更新」排序。
+        novel.setUpdatedAt(LocalDateTime.now());
         Chapter saved = chapterRepository.save(chapter);
         log.info("保存章节 novelId={}, chapterId={}, no={}, title={}",
                 novelId, saved.getId(), saved.getChapterNo(), saved.getTitle());

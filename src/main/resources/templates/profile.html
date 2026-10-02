@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>个人中心 - 小说阅读平台</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; margin: 0; color: #333; }
+        .navbar { background: #2c3e50; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: #fff; text-decoration: none; margin: 0 8px; }
+        .nav-left .brand { font-size: 18px; font-weight: bold; margin-right: 20px; }
+        .btn-link, button.btn-link { background: none; border: none; color: #fff; cursor: pointer; font-size: 14px; }
+        .container { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+
+        .header-bar { background: #fff; padding: 20px 24px; border-radius: 8px; margin-bottom: 20px;
+                      box-shadow: 0 2px 6px rgba(0,0,0,.06); display: flex; justify-content: space-between; align-items: center; }
+        .header-bar h1 { margin: 0; font-size: 22px; color: #2c3e50; }
+
+        .card { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+        .card h2 { margin: 0 0 16px; font-size: 17px; color: #2c3e50; padding-bottom: 10px; border-bottom: 2px solid #ecf0f1; }
+
+        .info-row { display: flex; padding: 8px 0; font-size: 14px; }
+        .info-row .k { width: 100px; color: #7f8c8d; }
+        .info-row .v { color: #2c3e50; font-weight: bold; }
+
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .stat { background: #f8f9fa; border-radius: 6px; padding: 16px; text-align: center; }
+        .stat .num { font-size: 26px; font-weight: bold; color: #e74c3c; }
+        .stat .label { font-size: 13px; color: #7f8c8d; margin-top: 6px; }
+
+        .form-row { margin-bottom: 14px; }
+        .form-row label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
+        .form-row input { width: 100%; max-width: 320px; padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .btn { padding: 9px 20px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; color: #fff; }
+        .btn-primary { background: #e74c3c; }
+        .btn-primary:hover { background: #c0392b; }
+        .btn-secondary { background: #3498db; }
+        .btn-secondary:hover { background: #2980b9; }
+
+        .flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 14px; }
+        .flash.ok { background: #dff5e1; color: #1e8449; }
+        .flash.err { background: #fde2e2; color: #c0392b; }
+        .hint { font-size: 12px; color: #95a5a6; margin-top: 6px; }
+
+        .footer { text-align: center; padding: 24px; color: #95a5a6; font-size: 13px; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container">
+    <div class="header-bar">
+        <h1>👤 个人中心</h1>
+    </div>
+
+    <div class="flash ok" th:if="${nicknameMessage}" th:text="${nicknameMessage}">ok</div>
+    <div class="flash err" th:if="${nicknameError}" th:text="${nicknameError}">err</div>
+    <div class="flash ok" th:if="${passwordMessage}" th:text="${passwordMessage}">ok</div>
+    <div class="flash err" th:if="${passwordError}" th:text="${passwordError}">err</div>
+
+    <div class="card">
+        <h2>账号信息</h2>
+        <div class="info-row"><span class="k">用户名</span><span class="v" th:text="${user.username}">user</span></div>
+        <div class="info-row"><span class="k">昵称</span><span class="v" th:text="${user.getDisplayName()}">昵称</span></div>
+        <div class="info-row"><span class="k">角色</span><span class="v" th:text="${user.role}">USER</span></div>
+        <div class="info-row"><span class="k">注册时间</span><span class="v"
+                th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm')}">时间</span></div>
+    </div>
+
+    <div class="card">
+        <h2>使用统计</h2>
+        <div class="stats">
+            <div class="stat">
+                <div class="num" th:text="${bookshelfCount}">0</div>
+                <div class="label">📖 书架藏书</div>
+            </div>
+            <div class="stat">
+                <div class="num" th:text="${commentCount}">0</div>
+                <div class="label">💬 发表评论</div>
+            </div>
+            <div class="stat">
+                <div class="num" th:text="${historyCount}">0</div>
+                <div class="label">🕘 阅读历史</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>设置昵称</h2>
+        <form th:action="@{/profile/nickname}" method="post">
+            <div class="form-row">
+                <label>昵称(留空则展示用户名)</label>
+                <input type="text" name="nickname" maxlength="50" th:value="${user.nickname}"
+                       placeholder="输入昵称">
+            </div>
+            <button type="submit" class="btn btn-secondary">保存昵称</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>修改密码</h2>
+        <form th:action="@{/profile/password}" method="post">
+            <div class="form-row">
+                <label>原密码</label>
+                <input type="password" name="oldPassword" required>
+            </div>
+            <div class="form-row">
+                <label>新密码</label>
+                <input type="password" name="newPassword" required>
+                <div class="hint">至少 6 个字符</div>
+            </div>
+            <div class="form-row">
+                <label>确认新密码</label>
+                <input type="password" name="confirmPassword" required>
+            </div>
+            <button type="submit" class="btn btn-primary">修改密码</button>
+        </form>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

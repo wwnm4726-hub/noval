@@ -66,6 +66,12 @@ public class ReadingProgressService {
         return progressRepository.findByUserIdOrderByUpdatedAtDesc(userId);
     }
 
+    /** 我的阅读历史条数。 */
+    @Transactional(readOnly = true)
+    public long countByUser(Long userId) {
+        return progressRepository.countByUserId(userId);
+    }
+
     public void deleteByNovel(Long novelId) {
         long removed = progressRepository.deleteByNovelId(novelId);
         log.info("清理小说 {} 的阅读进度 {} 条", novelId, removed);

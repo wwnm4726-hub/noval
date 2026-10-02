@@ -20,6 +20,7 @@
         <span sec:authorize="isAuthenticated()">
             <a th:href="@{/bookshelf}">📖 我的书架</a>
             <a th:href="@{/history}">🕘 阅读历史</a>
+            <a th:href="@{/profile}">👤 个人中心</a>
             <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}">⚙️ 后台管理</a>
             <span class="user">
                 欢迎,<span sec:authentication="name">user</span>

@@ -44,6 +44,12 @@ public class CommentService {
         return commentRepository.countByNovelId(novelId);
     }
 
+    /** 我发表的评论数。 */
+    @Transactional(readOnly = true)
+    public long countByUser(Long userId) {
+        return commentRepository.countByUserId(userId);
+    }
+
     public Comment add(Long userId, Long novelId, String content) {
         if (content == null || content.isBlank()) {
             throw new IllegalArgumentException("评论内容不能为空");

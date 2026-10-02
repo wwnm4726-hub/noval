@@ -22,6 +22,10 @@ public class User {
     @Column(nullable = false, length = 20)
     private String role = "USER";
 
+    /** 昵称: 可空,留空时展示名回退为用户名。 */
+    @Column(length = 50)
+    private String nickname;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -41,6 +45,13 @@ public class User {
     public void setPassword(String password) { this.password = password; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    public String getNickname() { return nickname; }
+    public void setNickname(String nickname) { this.nickname = nickname; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    /** 展示名: 昵称优先,留空时回退用户名。 */
+    public String getDisplayName() {
+        return (nickname != null && !nickname.isBlank()) ? nickname : username;
+    }
 }

@@ -68,9 +68,15 @@
        th:classappend="${activeCategory == c} ? 'active' : ''">分类</a>
     <span class="sort-toggle">
         <a th:href="@{/(category=${activeCategory},keyword=${keyword},sort='new')}"
-           th:classappend="${sort != 'hot'} ? 'active' : ''">🆕 最新</a>
+           th:classappend="${sort == 'new' or sort == null or sort == ''} ? 'active' : ''">🆕 最新</a>
         <a th:href="@{/(category=${activeCategory},keyword=${keyword},sort='hot')}"
            th:classappend="${sort == 'hot'} ? 'active' : ''">🔥 热门</a>
+        <a th:href="@{/(category=${activeCategory},keyword=${keyword},sort='update')}"
+           th:classappend="${sort == 'update'} ? 'active' : ''">🕒 最近更新</a>
+        <a th:href="@{/(category=${activeCategory},keyword=${keyword},sort='rating')}"
+           th:classappend="${sort == 'rating'} ? 'active' : ''">⭐ 好评</a>
+        <a th:href="@{/(category=${activeCategory},keyword=${keyword},sort='collect')}"
+           th:classappend="${sort == 'collect'} ? 'active' : ''">📖 收藏</a>
     </span>
     <form th:action="@{/}" method="get">
         <input type="hidden" name="sort" th:value="${sort}">
@@ -82,7 +88,13 @@
     <h2 class="page-title">
         <span th:if="${activeCategory != null and activeCategory != ''}" th:text="${activeCategory + ' · 小说列表'}">分类</span>
         <span th:if="${activeCategory == null or activeCategory == ''}"
-              th:text="${sort == 'hot'} ? '🔥 热门作品' : '🆕 最新上架'">最新</span>
+              th:switch="${sort}">
+            <span th:case="'hot'">🔥 热门作品</span>
+            <span th:case="'update'">🕒 最近更新</span>
+            <span th:case="'rating'">⭐ 好评作品</span>
+            <span th:case="'collect'">📖 收藏最多</span>
+            <span th:case="*">🆕 最新上架</span>
+        </span>
         <span class="count" th:text="'共 ' + ${novels.size()} + ' 本'">共 0 本</span>
     </h2>
 

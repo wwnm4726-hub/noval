@@ -15,5 +15,7 @@ public interface ReadingProgressRepository extends JpaRepository<ReadingProgress
     /** 按最近阅读时间倒序列出某用户的全部进度(用于阅读历史)。 */
     List<ReadingProgress> findByUserIdOrderByUpdatedAtDesc(Long userId);
 
+    long countByUserId(Long userId);
+
     long deleteByNovelId(Long novelId);
 }
