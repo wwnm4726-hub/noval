@@ -24,10 +24,14 @@ public class ChapterService {
 
     private final ChapterRepository chapterRepository;
     private final NovelRepository novelRepository;
+    private final CommentService commentService;
 
-    public ChapterService(ChapterRepository chapterRepository, NovelRepository novelRepository) {
+    public ChapterService(ChapterRepository chapterRepository,
+                          NovelRepository novelRepository,
+                          CommentService commentService) {
         this.chapterRepository = chapterRepository;
         this.novelRepository = novelRepository;
+        this.commentService = commentService;
     }
 
     public List<Chapter> listChaptersAsc(Long novelId) {
@@ -110,6 +114,7 @@ public class ChapterService {
     public void deleteChapter(Long novelId, Integer chapterNo) {
         Chapter chapter = chapterRepository.findByNovelIdAndChapterNo(novelId, chapterNo)
                 .orElseThrow(() -> new IllegalArgumentException("章节不存在"));
+        commentService.deleteByChapter(chapter.getId());
         chapterRepository.delete(chapter);
         log.info("删除章节 novelId={}, no={}", novelId, chapterNo);
     }

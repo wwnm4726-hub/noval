@@ -28,8 +28,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 /**
  * 评论 REST API。
  * - GET 列表: 公开
- * - POST 发表: 需登录
- * - DELETE 删除: 需登录,仅作者本人或管理员
+ * - POST 发表/回复/点赞: 需登录
+ * - DELETE 删除/取消点赞: 需登录,删除仅作者本人或管理员
  */
 @RestController
 @RequestMapping("/api")
@@ -46,15 +46,25 @@ public class ApiCommentController {
         this.currentUserService = currentUserService;
     }
 
+    /** 小说详情页评论列表(顶层 + 回复 + 点赞信息)。 */
     @GetMapping("/novels/{novelId}/comments")
     public List<CommentView> list(@PathVariable("novelId") Long novelId,
                                   @AuthenticationPrincipal UserDetails principal) {
         User viewer = currentUserService.find(principal);
-        return commentService.listByNovel(novelId).stream()
-                .map(c -> CommentView.of(c, viewer))
-                .toList();
+        return commentService.listViewsByNovel(novelId, viewer);
     }
 
+    /** 某章节的评论列表。 */
+    @GetMapping("/novels/{novelId}/chapters/{chapterNo}/comments")
+    public List<CommentView> listChapter(@PathVariable("novelId") Long novelId,
+                                         @PathVariable("chapterNo") Integer chapterNo,
+                                         @AuthenticationPrincipal UserDetails principal) {
+        User viewer = currentUserService.find(principal);
+        Long chapterId = commentService.chapterIdOrThrow(novelId, chapterNo);
+        return commentService.listViewsByChapter(chapterId, viewer);
+    }
+
+    /** 发表针对整本小说的顶层评论。 */
     @PostMapping("/novels/{novelId}/comments")
     @ResponseStatus(HttpStatus.CREATED)
     public CommentView add(@PathVariable("novelId") Long novelId,
@@ -63,7 +73,52 @@ public class ApiCommentController {
         User user = currentUserService.require(principal);
         Comment comment = commentService.add(user.getId(), novelId,
                 request == null ? null : request.content());
-        return CommentView.of(comment, user);
+        return CommentView.of(comment, user, 0L, false, List.of());
+    }
+
+    /** 发表针对某章节的评论。 */
+    @PostMapping("/novels/{novelId}/chapters/{chapterNo}/comments")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CommentView addChapter(@PathVariable("novelId") Long novelId,
+                                  @PathVariable("chapterNo") Integer chapterNo,
+                                  @RequestBody CommentRequest request,
+                                  @AuthenticationPrincipal UserDetails principal) {
+        User user = currentUserService.require(principal);
+        Comment comment = commentService.addChapterComment(user.getId(), novelId, chapterNo,
+                request == null ? null : request.content());
+        return CommentView.of(comment, user, 0L, false, List.of());
+    }
+
+    /** 回复某条顶层评论(一层楼中楼)。 */
+    @PostMapping("/comments/{id}/reply")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CommentView reply(@PathVariable("id") Long id,
+                             @RequestBody CommentRequest request,
+                             @AuthenticationPrincipal UserDetails principal) {
+        User user = currentUserService.require(principal);
+        Comment reply = commentService.addReply(user.getId(), id,
+                request == null ? null : request.content());
+        return CommentView.of(reply, user, 0L, false, List.of());
+    }
+
+    /** 点赞评论(幂等)。 */
+    @PostMapping("/comments/{id}/like")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void like(@PathVariable("id") Long id,
+                     @AuthenticationPrincipal UserDetails principal) {
+        User user = currentUserService.require(principal);
+        commentService.like(user.getId(), id);
+        log.debug("用户 {} 点赞评论 {}", user.getUsername(), id);
+    }
+
+    /** 取消点赞(幂等)。 */
+    @DeleteMapping("/comments/{id}/like")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unlike(@PathVariable("id") Long id,
+                       @AuthenticationPrincipal UserDetails principal) {
+        User user = currentUserService.require(principal);
+        commentService.unlike(user.getId(), id);
+        log.debug("用户 {} 取消点赞评论 {}", user.getUsername(), id);
     }
 
     @DeleteMapping("/comments/{id}")

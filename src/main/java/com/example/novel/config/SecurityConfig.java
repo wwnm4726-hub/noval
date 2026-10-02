@@ -45,10 +45,20 @@ public class SecurityConfig {
                         // 详情页评论写操作(表单): 需登录(未登录跳登录页)
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/novels/*/comments")).authenticated()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/novels/*/comments/*/delete")).authenticated()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/novels/*/comments/*/reply")).authenticated()
+                        // 阅读页章节评论写操作(表单): 需登录
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/novels/*/chapters/*/comments")).authenticated()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/novels/*/chapters/*/comments/*/delete")).authenticated()
+                        // 详情页评论点赞/取消(表单): 需登录
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/comments/*/like")).authenticated()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/comments/*/unlike")).authenticated()
                         // 详情页打分(表单): 需登录
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/novels/*/rating")).authenticated()
                         // 评论写操作(API): 需登录
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/novels/*/comments")).authenticated()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/novels/*/chapters/*/comments")).authenticated()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/comments/*/reply")).authenticated()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/api/comments/*/like")).authenticated()
                         .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.DELETE, "/api/comments/**")).authenticated()
                         // 当前用户接口: 需登录
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/api/me/**")).authenticated()

@@ -10,8 +10,14 @@ import java.util.Optional;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    /** 按发表时间倒序列出某本小说的评论。 */
-    List<Comment> findByNovelIdOrderByCreatedAtDesc(Long novelId);
+    /** 小说详情页评论: 针对整本小说(chapter 为空)的顶层评论(parent 为空),按时间倒序。 */
+    List<Comment> findByNovelIdAndChapterIsNullAndParentIsNullOrderByCreatedAtDesc(Long novelId);
+
+    /** 某章节的顶层评论,按时间正序。 */
+    List<Comment> findByChapterIdAndParentIsNullOrderByCreatedAtAsc(Long chapterId);
+
+    /** 某条顶层评论下的回复,按时间正序。 */
+    List<Comment> findByParentIdOrderByCreatedAtAsc(Long parentId);
 
     long countByNovelId(Long novelId);
 
@@ -20,4 +26,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     Optional<Comment> findByIdAndUserId(Long id, Long userId);
 
     long deleteByNovelId(Long novelId);
+
+    long deleteByChapterId(Long chapterId);
+
+    long deleteByParentId(Long parentId);
 }

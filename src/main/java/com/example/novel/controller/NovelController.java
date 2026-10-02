@@ -2,7 +2,6 @@ package com.example.novel.controller;
 
 import com.example.novel.dto.CommentView;
 import com.example.novel.entity.Chapter;
-import com.example.novel.entity.Comment;
 import com.example.novel.entity.Novel;
 import com.example.novel.entity.ReadingProgress;
 import com.example.novel.entity.User;
@@ -81,10 +80,7 @@ public class NovelController {
             userScore = ratingService.userScore(user.getId(), id).orElse(null);
         }
 
-        List<Comment> comments = commentService.listByNovel(id);
-        List<CommentView> commentViews = comments.stream()
-                .map(c -> CommentView.of(c, user))
-                .toList();
+        List<CommentView> commentViews = commentService.listViewsByNovel(id, user);
 
         model.addAttribute("novel", novel);
         model.addAttribute("chapters", chapters);
@@ -148,5 +144,42 @@ public class NovelController {
             ra.addFlashAttribute("commentError", ex.getMessage());
         }
         return "redirect:/novels/" + id;
+    }
+
+    /** 详情页回复某条顶层评论(表单提交,需登录)。 */
+    @PostMapping("/novels/{id}/comments/{commentId}/reply")
+    public String replyComment(@PathVariable("id") Long id,
+                               @PathVariable("commentId") Long commentId,
+                               @RequestParam("content") String content,
+                               @AuthenticationPrincipal UserDetails principal,
+                               RedirectAttributes ra) {
+        User user = currentUserService.require(principal);
+        try {
+            commentService.addReply(user.getId(), commentId, content);
+            ra.addFlashAttribute("commentMessage", "回复已发表");
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("commentError", ex.getMessage());
+        }
+        return "redirect:/novels/" + id;
+    }
+
+    /** 点赞评论(表单提交,需登录;未登录跳登录页)。 */
+    @PostMapping("/comments/{commentId}/like")
+    public String likeComment(@PathVariable("commentId") Long commentId,
+                              @RequestParam("novelId") Long novelId,
+                              @AuthenticationPrincipal UserDetails principal) {
+        User user = currentUserService.require(principal);
+        commentService.like(user.getId(), commentId);
+        return "redirect:/novels/" + novelId;
+    }
+
+    /** 取消点赞(表单提交,需登录)。 */
+    @PostMapping("/comments/{commentId}/unlike")
+    public String unlikeComment(@PathVariable("commentId") Long commentId,
+                                @RequestParam("novelId") Long novelId,
+                                @AuthenticationPrincipal UserDetails principal) {
+        User user = currentUserService.require(principal);
+        commentService.unlike(user.getId(), commentId);
+        return "redirect:/novels/" + novelId;
     }
 }

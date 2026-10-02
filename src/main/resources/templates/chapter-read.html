@@ -49,6 +49,31 @@
         body.night .nav-buttons a.disabled { background: #262626; color: #666; }
         body.night .nav-buttons .toc { background: #4a6278; color: #fff; }
 
+        /* 章节评论 */
+        .comment-section { max-width: 800px; margin: 20px auto 0; background: #fff; padding: 24px 48px 36px;
+                           border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.06); transition: background .2s, color .2s; }
+        body.night .comment-section { background: #242424; box-shadow: none; }
+        .comment-section h2 { margin-top: 0; padding-bottom: 12px; border-bottom: 2px solid #ecf0f1; color: #2c3e50; font-size: 20px; }
+        body.night .comment-section h2 { color: #e0e0e0; border-color: #333; }
+        .comment-form textarea { width: 100%; min-height: 70px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical; }
+        .comment-form button { margin-top: 8px; }
+        .comment-login-tip { color: #7f8c8d; font-size: 14px; padding: 10px 0; }
+        .comment-login-tip a { color: #e74c3c; }
+        .comment-list { list-style: none; padding: 0; margin: 20px 0 0; }
+        .comment-item { border-top: 1px solid #ecf0f1; padding: 14px 0; display: flex; justify-content: space-between; gap: 12px; }
+        body.night .comment-item { border-color: #333; }
+        .comment-main { flex: 1; }
+        .comment-head { font-size: 13px; color: #7f8c8d; margin-bottom: 6px; }
+        .comment-head .author { color: #2980b9; font-weight: bold; }
+        .comment-body { font-size: 14px; color: #333; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
+        body.night .comment-body { color: #c9c9c9; }
+        .btn-del { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 13px; padding: 0; }
+        .flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+        .flash.ok { background: #dff5e1; color: #1e8449; }
+        .flash.err { background: #fde2e2; color: #c0392b; }
+        .btn { padding: 8px 18px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: #e74c3c; color: #fff; }
+
         .footer { text-align: center; padding: 24px; color: #95a5a6; font-size: 13px; margin-top: 40px; }
     </style>
 </head>
@@ -94,6 +119,41 @@
            th:href="@{/novels/{id}/chapters/{no}(id=${novel.id},no=${nextNo})}">下一章 →</a>
         <a th:unless="${hasNext}" class="disabled">已是最后一章</a>
     </div>
+</div>
+
+<div class="comment-section">
+    <h2>💬 本章评论 <span th:text="'(' + ${commentCount} + ')'">(0)</span></h2>
+
+    <div class="flash ok" th:if="${commentMessage}" th:text="${commentMessage}">ok</div>
+    <div class="flash err" th:if="${commentError}" th:text="${commentError}">err</div>
+
+    <form class="comment-form" sec:authorize="isAuthenticated()"
+          th:action="@{/novels/{id}/chapters/{no}/comments(id=${novel.id},no=${chapter.chapterNo})}" method="post">
+        <textarea name="content" maxlength="500" placeholder="说说你对本章的看法...(最多 500 字)" required></textarea>
+        <button type="submit" class="btn btn-primary">发表评论</button>
+    </form>
+    <div class="comment-login-tip" sec:authorize="!isAuthenticated()">
+        <a th:href="@{/login}">登录</a> 后即可发表评论。
+    </div>
+
+    <ul class="comment-list" th:if="${!#lists.isEmpty(comments)}">
+        <li class="comment-item" th:each="c : ${comments}">
+            <div class="comment-main">
+                <div class="comment-head">
+                    <span class="author" th:text="${c.username}">用户</span>
+                    <span th:if="${c.createdAt != null}"
+                          th:text="' · ' + ${#temporals.format(c.createdAt, 'yyyy-MM-dd HH:mm')}"> · 时间</span>
+                </div>
+                <div class="comment-body" th:text="${c.content}">内容</div>
+            </div>
+            <form sec:authorize="isAuthenticated()" th:if="${c.owner}"
+                  th:action="@{/novels/{id}/chapters/{no}/comments/{cid}/delete(id=${novel.id},no=${chapter.chapterNo},cid=${c.id})}"
+                  method="post" style="display:inline">
+                <button type="submit" class="btn-del">删除</button>
+            </form>
+        </li>
+    </ul>
+    <div class="comment-login-tip" th:if="${#lists.isEmpty(comments)}">本章还没有评论。</div>
 </div>
 
 <div th:replace="~{fragments/layout :: footer}"></div>

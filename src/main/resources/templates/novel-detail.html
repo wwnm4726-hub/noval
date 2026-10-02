@@ -72,6 +72,18 @@
         .comment-head .author { color: #2980b9; font-weight: bold; }
         .comment-body { font-size: 14px; color: #333; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
         .btn-del { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 13px; padding: 0; }
+        .comment-actions { margin-top: 8px; display: flex; gap: 14px; align-items: center; font-size: 13px; }
+        .comment-actions form { display: inline; }
+        .btn-like { background: none; border: none; color: #7f8c8d; cursor: pointer; font-size: 13px; padding: 0; }
+        .btn-like.liked { color: #e74c3c; font-weight: bold; }
+        .btn-reply { background: none; border: none; color: #2980b9; cursor: pointer; font-size: 13px; padding: 0; }
+        .reply-list { list-style: none; padding: 0 0 0 16px; margin: 10px 0 0; border-left: 3px solid #ecf0f1; }
+        .reply-item { padding: 8px 0; }
+        .reply-item .comment-head .author { color: #16a085; }
+        .reply-form { margin-top: 8px; display: none; }
+        .reply-form.open { display: block; }
+        .reply-form textarea { width: 100%; min-height: 50px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13px; resize: vertical; }
+        .reply-form button { margin-top: 6px; padding: 5px 12px; font-size: 13px; }
 
         .footer { text-align: center; padding: 24px; color: #95a5a6; font-size: 13px; margin-top: 40px; }
     </style>
@@ -210,12 +222,84 @@
                               th:text="' · ' + ${#temporals.format(c.createdAt, 'yyyy-MM-dd HH:mm')}"> · 时间</span>
                     </div>
                     <div class="comment-body" th:text="${c.content}">内容</div>
+
+                    <div class="comment-actions">
+                        <!-- 点赞 / 取消点赞 -->
+                        <form sec:authorize="isAuthenticated()"
+                              th:if="${!c.liked}"
+                              th:action="@{/comments/{cid}/like(cid=${c.id})}" method="post">
+                            <input type="hidden" name="novelId" th:value="${novel.id}">
+                            <button type="submit" class="btn-like">👍 赞 <span
+                                    th:if="${c.likeCount > 0}" th:text="${c.likeCount}">0</span></button>
+                        </form>
+                        <form sec:authorize="isAuthenticated()"
+                              th:if="${c.liked}"
+                              th:action="@{/comments/{cid}/unlike(cid=${c.id})}" method="post">
+                            <input type="hidden" name="novelId" th:value="${novel.id}">
+                            <button type="submit" class="btn-like liked">👍 已赞 <span
+                                    th:if="${c.likeCount > 0}" th:text="${c.likeCount}">0</span></button>
+                        </form>
+                        <span sec:authorize="!isAuthenticated()" class="btn-like"
+                              th:if="${c.likeCount > 0}" th:text="'👍 ' + ${c.likeCount}">👍 0</span>
+
+                        <!-- 回复按钮(仅登录用户,点开内联表单) -->
+                        <button sec:authorize="isAuthenticated()" type="button" class="btn-reply"
+                                th:attr="data-target='reply-'+${c.id}"
+                                onclick="toggleReply(this)">回复</button>
+
+                        <!-- 删除(仅本人或管理员) -->
+                        <form sec:authorize="isAuthenticated()" th:if="${c.owner}"
+                              th:action="@{/novels/{id}/comments/{cid}/delete(id=${novel.id},cid=${c.id})}"
+                              method="post">
+                            <button type="submit" class="btn-del">删除</button>
+                        </form>
+                    </div>
+
+                    <!-- 回复表单 -->
+                    <form class="reply-form" sec:authorize="isAuthenticated()"
+                          th:id="'reply-'+${c.id}"
+                          th:action="@{/novels/{id}/comments/{cid}/reply(id=${novel.id},cid=${c.id})}"
+                          method="post">
+                        <textarea name="content" maxlength="500" placeholder="回复该评论...(最多 500 字)"
+                                  required></textarea>
+                        <button type="submit" class="btn btn-secondary">发表回复</button>
+                    </form>
+
+                    <!-- 已有回复 -->
+                    <ul class="reply-list" th:if="${!#lists.isEmpty(c.replies)}">
+                        <li class="reply-item" th:each="r : ${c.replies}">
+                            <div class="comment-head">
+                                <span class="author" th:text="${r.username}">用户</span>
+                                <span th:if="${r.createdAt != null}"
+                                      th:text="' · ' + ${#temporals.format(r.createdAt, 'yyyy-MM-dd HH:mm')}"> · 时间</span>
+                            </div>
+                            <div class="comment-body" th:text="${r.content}">内容</div>
+                            <div class="comment-actions">
+                                <form sec:authorize="isAuthenticated()"
+                                      th:if="${!r.liked}"
+                                      th:action="@{/comments/{cid}/like(cid=${r.id})}" method="post">
+                                    <input type="hidden" name="novelId" th:value="${novel.id}">
+                                    <button type="submit" class="btn-like">👍 赞 <span
+                                            th:if="${r.likeCount > 0}" th:text="${r.likeCount}">0</span></button>
+                                </form>
+                                <form sec:authorize="isAuthenticated()"
+                                      th:if="${r.liked}"
+                                      th:action="@{/comments/{cid}/unlike(cid=${r.id})}" method="post">
+                                    <input type="hidden" name="novelId" th:value="${novel.id}">
+                                    <button type="submit" class="btn-like liked">👍 已赞 <span
+                                            th:if="${r.likeCount > 0}" th:text="${r.likeCount}">0</span></button>
+                                </form>
+                                <span sec:authorize="!isAuthenticated()" class="btn-like"
+                                      th:if="${r.likeCount > 0}" th:text="'👍 ' + ${r.likeCount}">👍 0</span>
+                                <form sec:authorize="isAuthenticated()" th:if="${r.owner}"
+                                      th:action="@{/novels/{id}/comments/{cid}/delete(id=${novel.id},cid=${r.id})}"
+                                      method="post">
+                                    <button type="submit" class="btn-del">删除</button>
+                                </form>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
-                <form sec:authorize="isAuthenticated()" th:if="${c.owner}"
-                      th:action="@{/novels/{id}/comments/{cid}/delete(id=${novel.id},cid=${c.id})}"
-                      method="post" style="display:inline">
-                    <button type="submit" class="btn-del">删除</button>
-                </form>
             </li>
         </ul>
         <div class="empty" th:if="${#lists.isEmpty(comments)}">还没有评论,来抢沙发吧~</div>
@@ -223,6 +307,16 @@
 </div>
 
 <div th:replace="~{fragments/layout :: footer}"></div>
+
+<script>
+    function toggleReply(btn) {
+        var id = btn.getAttribute('data-target');
+        var form = document.getElementById(id);
+        if (form) {
+            form.classList.toggle('open');
+        }
+    }
+</script>
 
 </body>
 </html>

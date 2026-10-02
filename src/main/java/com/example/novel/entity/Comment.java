@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * 小说评论: 登录用户可在小说详情页发表评论,并删除自己的评论。
+ * 评论: 可挂在小说(详情页)或某一章节(阅读页)下;支持一层回复(parent 自关联)。
+ * 顶层评论 parent 为空;回复的 parent 指向顶层评论。
  */
 @Entity
 @Table(name = "comments")
@@ -21,6 +22,16 @@ public class Comment {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "novel_id", nullable = false)
     private Novel novel;
+
+    /** 非空表示这是针对某章节的评论;为空表示针对整本小说(详情页)。 */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chapter_id")
+    private Chapter chapter;
+
+    /** 非空表示这是对某条顶层评论的回复(仅一层)。 */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Comment parent;
 
     @Column(nullable = false, length = 500)
     private String content;
@@ -42,6 +53,10 @@ public class Comment {
     public void setUser(User user) { this.user = user; }
     public Novel getNovel() { return novel; }
     public void setNovel(Novel novel) { this.novel = novel; }
+    public Chapter getChapter() { return chapter; }
+    public void setChapter(Chapter chapter) { this.chapter = chapter; }
+    public Comment getParent() { return parent; }
+    public void setParent(Comment parent) { this.parent = parent; }
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
     public LocalDateTime getCreatedAt() { return createdAt; }

@@ -2,7 +2,6 @@ package com.example.novel.service;
 
 import com.example.novel.entity.Novel;
 import com.example.novel.repository.BookshelfRepository;
-import com.example.novel.repository.CommentRepository;
 import com.example.novel.repository.NovelRepository;
 import com.example.novel.repository.RatingRepository;
 import com.example.novel.repository.ReadingProgressRepository;
@@ -31,21 +30,21 @@ public class NovelService {
     public static final String SORT_COLLECT = "collect";
 
     private final NovelRepository novelRepository;
-    private final CommentRepository commentRepository;
     private final ReadingProgressRepository progressRepository;
     private final RatingRepository ratingRepository;
     private final BookshelfRepository bookshelfRepository;
+    private final CommentService commentService;
 
     public NovelService(NovelRepository novelRepository,
-                        CommentRepository commentRepository,
                         ReadingProgressRepository progressRepository,
                         RatingRepository ratingRepository,
-                        BookshelfRepository bookshelfRepository) {
+                        BookshelfRepository bookshelfRepository,
+                        CommentService commentService) {
         this.novelRepository = novelRepository;
-        this.commentRepository = commentRepository;
         this.progressRepository = progressRepository;
         this.ratingRepository = ratingRepository;
         this.bookshelfRepository = bookshelfRepository;
+        this.commentService = commentService;
     }
 
     public List<Novel> listAll(String sort) {
@@ -142,7 +141,7 @@ public class NovelService {
     public void deleteNovel(Long id) {
         Novel novel = novelRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("小说不存在"));
-        commentRepository.deleteByNovelId(id);
+        commentService.deleteByNovel(id);
         progressRepository.deleteByNovelId(id);
         ratingRepository.deleteByNovelId(id);
         bookshelfRepository.deleteByNovelId(id);
