@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>小说管理 - 运营后台</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; margin: 0; color: #333; }
+        .navbar { background: #2c3e50; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: #fff; text-decoration: none; margin: 0 8px; }
+        .nav-left .brand { font-size: 18px; font-weight: bold; margin-right: 20px; }
+        .btn-link, button.btn-link { background: none; border: none; color: #fff; cursor: pointer; font-size: 14px; }
+        .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+
+        .header-bar { background: #fff; padding: 20px 24px; border-radius: 8px; margin-bottom: 16px;
+                      box-shadow: 0 2px 6px rgba(0,0,0,.06); display: flex; justify-content: space-between; align-items: center; }
+        .header-bar h1 { margin: 0; font-size: 22px; color: #2c3e50; }
+        .btn { padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #27ae60; color: #fff; }
+        .btn-primary:hover { background: #1e8449; }
+        .btn-sm { padding: 5px 10px; font-size: 13px; }
+        .btn-edit { background: #3498db; color: #fff; }
+        .btn-edit:hover { background: #2980b9; }
+        .btn-chapters { background: #8e44ad; color: #fff; }
+        .btn-chapters:hover { background: #71368a; }
+        .btn-del { background: #e74c3c; color: #fff; }
+        .btn-del:hover { background: #c0392b; }
+
+        .flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+        .flash.ok { background: #dff5e1; color: #1e8449; }
+        .flash.err { background: #fde2e2; color: #c0392b; }
+
+        table { width: 100%; background: #fff; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #ecf0f1; font-size: 14px; }
+        th { background: #34495e; color: #fff; font-weight: normal; }
+        tr:last-child td { border-bottom: none; }
+        td.title { font-weight: bold; color: #2c3e50; }
+        .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .empty { background: #fff; padding: 40px; text-align: center; color: #7f8c8d; border-radius: 8px; }
+        .footer { text-align: center; padding: 24px; color: #95a5a6; font-size: 13px; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container">
+    <div class="header-bar">
+        <h1>⚙️ 小说管理</h1>
+        <a th:href="@{/admin/novels/new}" class="btn btn-primary">＋ 新增小说</a>
+    </div>
+
+    <div class="flash ok" th:if="${message}" th:text="${message}">ok</div>
+    <div class="flash err" th:if="${error}" th:text="${error}">err</div>
+
+    <table th:if="${!#lists.isEmpty(novels)}">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>书名</th>
+            <th>作者</th>
+            <th>分类</th>
+            <th>状态</th>
+            <th>章节</th>
+            <th>浏览</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="n : ${novels}">
+            <td th:text="${n.id}">1</td>
+            <td class="title" th:text="${n.title}">书名</td>
+            <td th:text="${n.author}">作者</td>
+            <td th:text="${n.category}">分类</td>
+            <td th:text="${n.status}">状态</td>
+            <td th:text="${n.chapterCount}">0</td>
+            <td th:text="${n.viewCount}">0</td>
+            <td>
+                <div class="actions">
+                    <a th:href="@{/admin/novels/{id}/edit(id=${n.id})}" class="btn btn-sm btn-edit">编辑</a>
+                    <a th:href="@{/admin/novels/{id}/chapters(id=${n.id})}" class="btn btn-sm btn-chapters">章节管理</a>
+                    <form th:action="@{/admin/novels/{id}/delete(id=${n.id})}" method="post"
+                          onsubmit="return confirm('确认删除《' + '${n.title}' + '》及其全部章节?此操作不可恢复。')">
+                        <button type="submit" class="btn btn-sm btn-del">删除</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="empty" th:if="${#lists.isEmpty(novels)}">暂无小说,点右上角新增。</div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

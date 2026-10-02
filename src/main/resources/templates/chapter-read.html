@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${novel.title + ' · 第 ' + chapter.chapterNo + ' 章 ' + chapter.title}">章节阅读</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; margin: 0; color: #333; transition: background .2s, color .2s; }
+        .navbar { background: #2c3e50; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: #fff; text-decoration: none; margin: 0 8px; }
+        .nav-left .brand { font-size: 18px; font-weight: bold; margin-right: 20px; }
+        .btn-link, button.btn-link { background: none; border: none; color: #fff; cursor: pointer; font-size: 14px; }
+
+        .reader-bar { background: #34495e; color: #fff; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; gap: 12px; flex-wrap: wrap; }
+        .reader-bar a { color: #bdc3c7; text-decoration: none; margin: 0 6px; }
+        .reader-bar a:hover { color: #fff; }
+        .reader-tools { display: flex; align-items: center; gap: 8px; }
+        .reader-tools button { background: #2c3e50; color: #fff; border: 1px solid #4a6278; border-radius: 4px; cursor: pointer; padding: 4px 10px; font-size: 14px; }
+        .reader-tools button:hover { background: #1a252f; }
+
+        .container { max-width: 800px; margin: 24px auto; background: #fff; padding: 36px 48px; border-radius: 8px;
+                     box-shadow: 0 2px 8px rgba(0,0,0,.06); transition: background .2s, color .2s; }
+        .breadcrumb { color: #7f8c8d; margin-bottom: 20px; font-size: 13px; }
+        .breadcrumb a { color: #2980b9; text-decoration: none; }
+
+        .chapter-title { font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0 8px; color: #2c3e50; }
+        .chapter-meta { text-align: center; color: #95a5a6; font-size: 13px; margin-bottom: 30px; }
+        .chapter-content { font-size: 18px; line-height: 2; color: #2c3e50;
+                           white-space: pre-wrap; word-wrap: break-word; }
+        .chapter-content p { margin: 0 0 1em; }
+
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 24px;
+                       border-top: 1px solid #ecf0f1; gap: 10px; }
+        .nav-buttons a { flex: 1; text-align: center; padding: 12px; border-radius: 6px; text-decoration: none;
+                         background: #ecf0f1; color: #2c3e50; transition: background .2s; }
+        .nav-buttons a:hover:not(.disabled) { background: #3498db; color: #fff; }
+        .nav-buttons a.disabled { background: #f5f5f5; color: #bdc3c7; cursor: not-allowed; }
+        .nav-buttons .toc { background: #34495e; color: #fff; }
+        .nav-buttons .toc:hover { background: #2c3e50; }
+
+        /* 夜间模式 */
+        body.night { background: #1a1a1a; color: #c9c9c9; }
+        body.night .container { background: #242424; box-shadow: none; }
+        body.night .chapter-title { color: #e0e0e0; }
+        body.night .chapter-content { color: #c9c9c9; }
+        body.night .breadcrumb { color: #888; }
+        body.night .nav-buttons a { background: #333; color: #ccc; }
+        body.night .nav-buttons a.disabled { background: #262626; color: #666; }
+        body.night .nav-buttons .toc { background: #4a6278; color: #fff; }
+
+        .footer { text-align: center; padding: 24px; color: #95a5a6; font-size: 13px; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="reader-bar">
+    <div>
+        <a th:href="@{/novels/{id}(id=${novel.id})}">📖 返回《<span th:text="${novel.title}">书名</span>》目录</a>
+    </div>
+    <div class="reader-tools">
+        <span th:text="'第 ' + chapter.chapterNo + ' / 共 ' + ${chapterTotal} + ' 章'" style="margin-right:8px">第 1 / 共 N 章</span>
+        <button type="button" id="font-dec" title="缩小字号">A-</button>
+        <button type="button" id="font-inc" title="放大字号">A+</button>
+        <button type="button" id="night-toggle" title="切换夜间模式">🌙 夜间</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="breadcrumb">
+        <a th:href="@{/}">首页</a> /
+        <a th:href="@{/novels/{id}(id=${novel.id})}" th:text="${novel.title}">书名</a> /
+        <span th:text="'第 ' + chapter.chapterNo + ' 章 ' + chapter.title">章节</span>
+    </div>
+
+    <h1 class="chapter-title" th:text="${'第 ' + chapter.chapterNo + ' 章 ' + chapter.title}">章节标题</h1>
+    <div class="chapter-meta">
+        👤 <span th:text="${novel.author}">作者</span> ·
+        📝 <span th:text="${chapter.wordCount}">0</span> 字
+    </div>
+
+    <div class="chapter-content" th:text="${chapter.content}">正文</div>
+
+    <div class="nav-buttons">
+        <a th:if="${hasPrev}"
+           th:href="@{/novels/{id}/chapters/{no}(id=${novel.id},no=${prevNo})}">← 上一章</a>
+        <a th:unless="${hasPrev}" class="disabled">已是第一章</a>
+
+        <a th:href="@{/novels/{id}(id=${novel.id})}" class="toc">📑 目录</a>
+
+        <a th:if="${hasNext}"
+           th:href="@{/novels/{id}/chapters/{no}(id=${novel.id},no=${nextNo})}">下一章 →</a>
+        <a th:unless="${hasNext}" class="disabled">已是最后一章</a>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script th:inline="javascript">
+    (function () {
+        var content = document.querySelector('.chapter-content');
+        var KEY_SIZE = 'reader_font_size';
+        var KEY_NIGHT = 'reader_night';
+        var MIN = 14, MAX = 32;
+
+        var size = parseInt(localStorage.getItem(KEY_SIZE) || '18', 10);
+        if (isNaN(size) || size < MIN || size > MAX) { size = 18; }
+        var night = localStorage.getItem(KEY_NIGHT) === '1';
+
+        var nightBtn = document.getElementById('night-toggle');
+
+        function applySize() { if (content) { content.style.fontSize = size + 'px'; } }
+        function applyNight() {
+            document.body.classList.toggle('night', night);
+            if (nightBtn) { nightBtn.textContent = night ? '☀️ 日间' : '🌙 夜间'; }
+        }
+
+        applySize();
+        applyNight();
+
+        document.getElementById('font-dec').addEventListener('click', function () {
+            if (size > MIN) { size -= 2; localStorage.setItem(KEY_SIZE, String(size)); applySize(); }
+        });
+        document.getElementById('font-inc').addEventListener('click', function () {
+            if (size < MAX) { size += 2; localStorage.setItem(KEY_SIZE, String(size)); applySize(); }
+        });
+        nightBtn.addEventListener('click', function () {
+            night = !night;
+            localStorage.setItem(KEY_NIGHT, night ? '1' : '0');
+            applyNight();
+        });
+    })();
+</script>
+
+</body>
+</html>

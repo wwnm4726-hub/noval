@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>我的书架 - 小说阅读平台</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; margin: 0; color: #333; }
+        .navbar { background: #2c3e50; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: #fff; text-decoration: none; margin: 0 8px; }
+        .nav-left .brand { font-size: 18px; font-weight: bold; margin-right: 20px; }
+        .btn-link, button.btn-link { background: none; border: none; color: #fff; cursor: pointer; font-size: 14px; }
+        .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+
+        .header-bar { background: #fff; padding: 20px 24px; border-radius: 8px; margin-bottom: 20px;
+                      box-shadow: 0 2px 6px rgba(0,0,0,.06); display: flex; justify-content: space-between; align-items: center; }
+        .header-bar h1 { margin: 0; font-size: 22px; color: #2c3e50; }
+        .header-bar .count { color: #7f8c8d; font-size: 14px; }
+        .header-bar .hint { color: #95a5a6; font-size: 12px; margin-left: 8px; }
+        .header-bar a.btn-home { padding: 6px 16px; background: #3498db; color: #fff; border-radius: 4px; text-decoration: none; font-size: 14px; }
+        .header-bar a.btn-home:hover { background: #2980b9; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; }
+        .card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.08); display: flex; flex-direction: column; }
+        .card a { color: inherit; text-decoration: none; }
+        .card-cover { width: 100%; height: 240px; object-fit: cover; background: #ecf0f1; display: block; }
+        .card-body { padding: 12px; flex: 1; display: flex; flex-direction: column; }
+        .card-title { font-size: 15px; font-weight: bold; margin: 0 0 4px; color: #2c3e50; }
+        .card-author { font-size: 12px; color: #7f8c8d; margin-bottom: 8px; }
+
+        .progress-badge { font-size: 12px; padding: 4px 8px; border-radius: 12px; display: inline-block; margin-bottom: 4px; }
+        .progress-badge.started { background: #fef5e7; color: #b9770e; }
+        .progress-badge.none { background: #ecf0f1; color: #7f8c8d; }
+        .progress-bar { height: 5px; background: #ecf0f1; border-radius: 3px; overflow: hidden; margin: 6px 0; }
+        .progress-bar > span { display: block; height: 100%; background: #e67e22; }
+        .continue-link { display: block; text-align: center; font-size: 13px; color: #e67e22; text-decoration: none; margin-top: 6px; font-weight: bold; }
+        .continue-link:hover { text-decoration: underline; }
+
+        .card-actions { margin-top: auto; padding-top: 8px; border-top: 1px solid #ecf0f1; }
+        .btn-remove { width: 100%; padding: 6px; background: #e74c3c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .btn-remove:hover { background: #c0392b; }
+
+        .empty { background: #fff; padding: 60px 20px; border-radius: 8px; text-align: center; color: #7f8c8d; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+        .empty a { color: #e74c3c; text-decoration: none; font-weight: bold; }
+
+        .footer { text-align: center; padding: 24px; color: #95a5a6; font-size: 13px; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container">
+    <div class="header-bar">
+        <h1>
+            📖 <span th:text="${currentUsername}">用户</span> 的书架
+            <span class="count" th:text="'共收藏 ' + ${bookshelfCount} + ' 本'">共 0 本</span>
+            <span class="hint">按最近阅读时间排序</span>
+        </h1>
+        <a th:href="@{/}" class="btn-home">去首页逛逛</a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(items)}" class="empty">
+        <p style="font-size: 18px; margin-bottom: 12px;">📚 书架空空如也</p>
+        <p>还没有收藏任何小说,去 <a th:href="@{/}">首页</a> 找点好书吧!</p>
+    </div>
+
+    <div class="grid" th:if="${!#lists.isEmpty(items)}">
+        <div class="card" th:each="it : ${items}">
+            <a th:href="@{/novels/{id}(id=${it.novel.id})}">
+                <img class="card-cover"
+                     th:src="${it.novel.cover != null and it.novel.cover != ''} ? ${it.novel.cover} : 'https://placehold.co/200x240/95a5a6/ffffff?text=No+Cover'"
+                     th:alt="${it.novel.title}">
+                <div class="card-body">
+                    <div class="card-title" th:text="${it.novel.title}">书名</div>
+                    <div class="card-author" th:text="${'作者: ' + it.novel.author}">作者</div>
+
+                    <div class="progress-badge started" th:if="${it.started}"
+                         th:text="'读到第 ' + ${it.progressChapterNo} + ' 章 / 共 ' + ${it.chapterTotal} + ' 章'">
+                        读到第 2 章 / 共 3 章
+                    </div>
+                    <div class="progress-badge none" th:unless="${it.started}">尚未开始阅读</div>
+
+                    <div class="progress-bar" th:if="${it.started and it.chapterTotal > 0}">
+                        <span th:style="'width:' + ${(it.progressChapterNo * 100 / it.chapterTotal)} + '%'"></span>
+                    </div>
+                </div>
+            </a>
+            <div class="card-actions">
+                <a sec:authorize="isAuthenticated()" th:if="${it.started}"
+                   class="continue-link"
+                   th:href="@{/novels/{id}/chapters/{no}(id=${it.novel.id},no=${it.progressChapterNo})}">
+                    ▶ 继续阅读
+                </a>
+                <form th:action="@{/bookshelf/remove}" method="post" style="margin-top:6px">
+                    <input type="hidden" name="novelId" th:value="${it.novel.id}">
+                    <button type="submit" class="btn-remove">✕ 移出书架</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

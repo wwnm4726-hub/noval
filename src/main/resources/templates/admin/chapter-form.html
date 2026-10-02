@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${mode == 'edit'} ? '编辑章节' : '新增章节'">章节表单</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; margin: 0; color: #333; }
+        .navbar { background: #2c3e50; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: #fff; text-decoration: none; margin: 0 8px; }
+        .nav-left .brand { font-size: 18px; font-weight: bold; margin-right: 20px; }
+        .btn-link, button.btn-link { background: none; border: none; color: #fff; cursor: pointer; font-size: 14px; }
+        .container { max-width: 760px; margin: 24px auto; padding: 0 16px; }
+
+        .card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+        .card h1 { margin: 0 0 6px; font-size: 20px; color: #2c3e50; }
+        .card .sub { color: #7f8c8d; font-size: 13px; margin-bottom: 16px; }
+        label { display: block; margin-top: 14px; font-weight: bold; font-size: 14px; }
+        input[type=number], input[type=text], textarea { width: 100%; padding: 9px; margin-top: 4px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 14px; }
+        textarea { min-height: 240px; resize: vertical; line-height: 1.7; }
+        .radius { color: #95a5a6; font-weight: normal; font-size: 12px; }
+        .btns { margin-top: 22px; display: flex; gap: 10px; }
+        .btn { padding: 9px 20px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #27ae60; color: #fff; }
+        .btn-primary:hover { background: #1e8449; }
+        .btn-outline { background: #fff; color: #34495e; border: 1px solid #bdc3c7; }
+        .btn-outline:hover { background: #ecf0f1; }
+        .flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; background: #fde2e2; color: #c0392b; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container">
+    <div class="card">
+        <h1 th:text="${mode == 'edit'} ? '✏️ 编辑章节' : '＋ 新增章节'">章节</h1>
+        <div class="sub">《<span th:text="${novel.title}">书名</span>》· 同一本书内章节号不可重复</div>
+
+        <div class="flash" th:if="${error}" th:text="${error}">错误</div>
+
+        <form th:action="${mode == 'edit'}
+                            ? @{/admin/novels/{id}/chapters/{no}(id=${novel.id},no=${chapter.chapterNo})}
+                            : @{/admin/novels/{id}/chapters(id=${novel.id})}"
+              method="post">
+            <label for="chapterNo">章节号 * <span class="radius">(正整数)</span></label>
+            <input type="number" id="chapterNo" name="chapterNo" min="1" required
+                   th:value="${mode == 'edit'} ? ${chapter.chapterNo} : ${nextNo}">
+
+            <label for="title">章节标题 *</label>
+            <input type="text" id="title" name="title" required maxlength="200"
+                   th:value="${chapter != null} ? ${chapter.title} : ''">
+
+            <label for="content">正文 *</label>
+            <textarea id="content" name="content" required
+                      th:text="${chapter != null} ? ${chapter.content} : ''"></textarea>
+
+            <div class="btns">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <a th:href="@{/admin/novels/{id}/chapters(id=${novel.id})}" class="btn btn-outline">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

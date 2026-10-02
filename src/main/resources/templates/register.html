@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>注册 - 小说阅读平台</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
+        .navbar { background: #2c3e50; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: #fff; text-decoration: none; margin-left: 12px; }
+        .container { max-width: 420px; margin: 60px auto; background: #fff; padding: 32px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+        h2 { margin-top: 0; }
+        label { display: block; margin-top: 12px; font-weight: bold; }
+        input[type=text], input[type=password] { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; margin-top: 20px; padding: 10px; background: #27ae60; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #1e8449; }
+        .msg { margin-top: 12px; padding: 8px; border-radius: 4px; background: #fde2e2; color: #c0392b; }
+        .links { margin-top: 16px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <div><a th:href="@{/}">📚 小说阅读平台</a></div>
+    <div>
+        <a th:href="@{/login}">登录</a>
+        <a th:href="@{/register}">注册</a>
+    </div>
+</div>
+
+<div class="container">
+    <h2>新用户注册</h2>
+
+    <div th:if="${error}" class="msg" th:text="${error}">错误信息</div>
+
+    <form th:action="@{/register}" method="post">
+        <label for="username">用户名</label>
+        <input type="text" id="username" name="username" required autofocus minlength="3" maxlength="50"
+               th:value="${username}">
+
+        <label for="password">密码</label>
+        <input type="password" id="password" name="password" required minlength="6" maxlength="50">
+
+        <label for="confirmPassword">确认密码</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6" maxlength="50">
+
+        <button type="submit">注 册</button>
+    </form>
+
+    <div class="links">
+        已有账号? <a th:href="@{/login}">立即登录</a>
+    </div>
+</div>
+</body>
+</html>

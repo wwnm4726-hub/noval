@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>小说阅读平台 - 首页</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; margin: 0; color: #333; }
+
+        /* navbar */
+        .navbar { background: #2c3e50; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-left a, .nav-right a { color: #fff; text-decoration: none; margin: 0 8px; }
+        .nav-left .brand { font-size: 18px; font-weight: bold; margin-right: 20px; }
+        .nav-right a.btn-link, .nav-right button.btn-link { background: none; border: none; color: #fff; cursor: pointer; font-size: 14px; }
+        .user { margin: 0 8px; color: #bdc3c7; }
+
+        /* category bar */
+        .category-bar { background: #34495e; padding: 10px 24px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .category-bar a { color: #ecf0f1; text-decoration: none; padding: 6px 14px; border-radius: 16px; transition: background .2s; font-size: 14px; }
+        .category-bar a:hover { background: #4a6278; }
+        .category-bar a.active { background: #e74c3c; color: #fff; }
+        .category-bar form { margin-left: auto; }
+        .category-bar input[type=text] { padding: 6px 10px; border: none; border-radius: 14px; outline: none; }
+        .sort-toggle { display: inline-flex; gap: 4px; margin-left: 12px; }
+        .sort-toggle a { padding: 6px 12px; }
+        .sort-toggle a.active { background: #e67e22; }
+
+        /* main */
+        .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+        .page-title { margin: 8px 0 20px; font-size: 20px; color: #2c3e50; }
+        .page-title .count { color: #7f8c8d; font-size: 14px; margin-left: 8px; }
+
+        /* card grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.08); transition: transform .2s, box-shadow .2s; display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+        .card a { color: inherit; text-decoration: none; }
+        .card-cover { width: 100%; height: 280px; object-fit: cover; background: #ecf0f1; display: block; }
+        .card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
+        .card-title { font-size: 16px; font-weight: bold; margin: 0 0 4px; color: #2c3e50; }
+        .card-author { font-size: 13px; color: #7f8c8d; margin-bottom: 8px; }
+        .card-desc { font-size: 13px; color: #555; line-height: 1.5; flex: 1; overflow: hidden;
+                     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+        .tag-cat { background: #ecf0f1; color: #34495e; }
+        .tag-status { background: #27ae60; color: #fff; }
+        .tag-status.done { background: #95a5a6; }
+        .views { font-size: 12px; color: #95a5a6; }
+
+        .empty { text-align: center; padding: 60px 20px; color: #7f8c8d; }
+
+        .footer { text-align: center; padding: 24px; color: #95a5a6; font-size: 13px; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+<!-- 公共导航 -->
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<!-- 分类条 -->
+<div class="category-bar">
+    <a th:href="@{/}" th:classappend="${activeCategory == null || activeCategory == ''} ? 'active' : ''">全部</a>
+    <a th:each="c : ${categories}"
+       th:href="@{/(category=${c})}"
+       th:text="${c}"
+       th:classappend="${activeCategory == c} ? 'active' : ''">分类</a>
+    <span class="sort-toggle">
+        <a th:href="@{/(category=${activeCategory},keyword=${keyword},sort='new')}"
+           th:classappend="${sort != 'hot'} ? 'active' : ''">🆕 最新</a>
+        <a th:href="@{/(category=${activeCategory},keyword=${keyword},sort='hot')}"
+           th:classappend="${sort == 'hot'} ? 'active' : ''">🔥 热门</a>
+    </span>
+    <form th:action="@{/}" method="get">
+        <input type="hidden" name="sort" th:value="${sort}">
+        <input type="text" name="keyword" placeholder="搜索书名或作者..." th:value="${keyword}">
+    </form>
+</div>
+
+<div class="container">
+    <h2 class="page-title">
+        <span th:if="${activeCategory != null and activeCategory != ''}" th:text="${activeCategory + ' · 小说列表'}">分类</span>
+        <span th:if="${activeCategory == null or activeCategory == ''}"
+              th:text="${sort == 'hot'} ? '🔥 热门作品' : '🆕 最新上架'">最新</span>
+        <span class="count" th:text="'共 ' + ${novels.size()} + ' 本'">共 0 本</span>
+    </h2>
+
+    <div th:if="${#lists.isEmpty(novels)}" class="empty">
+        <p>暂无小说,试试切换分类或搜索其他关键词。</p>
+    </div>
+
+    <div class="grid">
+        <div class="card" th:each="n : ${novels}">
+            <a th:href="@{/novels/{id}(id=${n.id})}">
+                <img class="card-cover"
+                     th:src="${n.cover != null and n.cover != ''} ? ${n.cover} : 'https://placehold.co/200x280/95a5a6/ffffff?text=No+Cover'"
+                     th:alt="${n.title}">
+                <div class="card-body">
+                    <div class="card-title" th:text="${n.title}">书名</div>
+                    <div class="card-author" th:text="${'作者: ' + n.author}">作者</div>
+                    <div class="card-desc" th:text="${n.description}">简介</div>
+                    <div class="card-footer">
+                        <span class="tag tag-cat" th:text="${n.category}">分类</span>
+                        <span class="views" th:text="'👁 ' + ${n.viewCount}">👁 0</span>
+                        <span class="tag tag-status"
+                              th:classappend="${n.status == '已完结'} ? 'done' : ''"
+                              th:text="${n.status}">状态</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

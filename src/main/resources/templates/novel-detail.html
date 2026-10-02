@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${novel.title + ' - 小说阅读平台'}">小说详情</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; margin: 0; color: #333; }
+        .navbar { background: #2c3e50; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: #fff; text-decoration: none; margin: 0 8px; }
+        .nav-left .brand { font-size: 18px; font-weight: bold; margin-right: 20px; }
+        .btn-link, button.btn-link { background: none; border: none; color: #fff; cursor: pointer; font-size: 14px; }
+        .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+        .breadcrumb { color: #7f8c8d; margin-bottom: 12px; font-size: 14px; }
+        .breadcrumb a { color: #2980b9; text-decoration: none; }
+
+        .detail-header { background: #fff; border-radius: 8px; padding: 24px; display: flex; gap: 24px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+        .detail-cover { width: 180px; height: 250px; object-fit: cover; border-radius: 6px; background: #ecf0f1; flex-shrink: 0; }
+        .detail-info { flex: 1; display: flex; flex-direction: column; }
+        .detail-title { font-size: 26px; font-weight: bold; margin: 0 0 8px; color: #2c3e50; }
+        .detail-meta { color: #7f8c8d; font-size: 14px; margin-bottom: 12px; }
+        .detail-meta span { margin-right: 16px; }
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-right: 6px; }
+        .tag-cat { background: #ecf0f1; color: #34495e; }
+        .tag-status { background: #27ae60; color: #fff; }
+        .tag-status.done { background: #95a5a6; }
+        .detail-desc { background: #fafafa; padding: 14px; border-radius: 6px; line-height: 1.8; color: #555; margin: 12px 0; font-size: 14px; }
+        .detail-actions { margin-top: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .btn { padding: 8px 18px; border-radius: 4px; border: none; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #e74c3c; color: #fff; }
+        .btn-primary:hover { background: #c0392b; }
+        .btn-secondary { background: #3498db; color: #fff; }
+        .btn-secondary:hover { background: #2980b9; }
+        .btn-success { background: #27ae60; color: #fff; }
+        .btn-success:hover { background: #1e8449; }
+        .btn-warning { background: #e67e22; color: #fff; }
+        .btn-warning:hover { background: #ca6f1e; }
+        .btn-outline { background: #fff; color: #34495e; border: 1px solid #bdc3c7; }
+        .btn-outline:hover { background: #ecf0f1; }
+        .flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+        .flash.ok { background: #dff5e1; color: #1e8449; }
+        .flash.err { background: #fde2e2; color: #c0392b; }
+
+        .chapter-section { background: #fff; border-radius: 8px; padding: 24px; margin-top: 20px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+        .chapter-section h2 { margin-top: 0; padding-bottom: 12px; border-bottom: 2px solid #ecf0f1; color: #2c3e50; font-size: 20px; }
+        .chapter-list { list-style: none; padding: 0; margin: 0;
+                        display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px; }
+        .chapter-list li { padding: 0; }
+        .chapter-list a { display: block; padding: 10px 12px; color: #2c3e50; text-decoration: none; border-radius: 4px; transition: background .2s; }
+        .chapter-list a:hover { background: #ecf0f1; color: #e74c3c; }
+        .chapter-list a.current { background: #fdecea; color: #c0392b; font-weight: bold; }
+        .chapter-list .ch-no { color: #95a5a6; margin-right: 8px; font-size: 13px; }
+        .empty { text-align: center; color: #7f8c8d; padding: 30px; }
+
+        /* 评论区 */
+        .comment-section { background: #fff; border-radius: 8px; padding: 24px; margin-top: 20px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+        .comment-section h2 { margin-top: 0; padding-bottom: 12px; border-bottom: 2px solid #ecf0f1; color: #2c3e50; font-size: 20px; }
+        .comment-form textarea { width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical; }
+        .comment-form button { margin-top: 8px; }
+        .comment-login-tip { color: #7f8c8d; font-size: 14px; padding: 10px 0; }
+        .comment-login-tip a { color: #e74c3c; }
+        .comment-list { list-style: none; padding: 0; margin: 20px 0 0; }
+        .comment-item { border-top: 1px solid #ecf0f1; padding: 14px 0; display: flex; justify-content: space-between; gap: 12px; }
+        .comment-main { flex: 1; }
+        .comment-head { font-size: 13px; color: #7f8c8d; margin-bottom: 6px; }
+        .comment-head .author { color: #2980b9; font-weight: bold; }
+        .comment-body { font-size: 14px; color: #333; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
+        .btn-del { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 13px; padding: 0; }
+
+        .footer { text-align: center; padding: 24px; color: #95a5a6; font-size: 13px; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container">
+    <div class="breadcrumb">
+        <a th:href="@{/}">首页</a> / <span th:text="${novel.category}">分类</span> / <span th:text="${novel.title}">书名</span>
+    </div>
+
+    <div class="flash ok" th:if="${bookshelfAdded}">已加入书架。</div>
+    <div class="flash err" th:if="${bookshelfError}" th:text="${bookshelfError}">加入失败</div>
+
+    <div class="detail-header">
+        <img class="detail-cover"
+             th:src="${novel.cover != null and novel.cover != ''} ? ${novel.cover} : 'https://placehold.co/180x250/95a5a6/ffffff?text=No+Cover'"
+             th:alt="${novel.title}">
+        <div class="detail-info">
+            <h1 class="detail-title" th:text="${novel.title}">书名</h1>
+            <div class="detail-meta">
+                <span>👤 作者: <strong th:text="${novel.author}">作者</strong></span>
+                <span>📚 共 <strong th:text="${chapterTotal}">0</strong> 章</span>
+                <span>👁 <strong th:text="${novel.viewCount}">0</strong> 次浏览</span>
+                <span class="tag tag-cat" th:text="${novel.category}">分类</span>
+                <span class="tag tag-status"
+                      th:classappend="${novel.status == '已完结'} ? 'done' : ''"
+                      th:text="${novel.status}">状态</span>
+            </div>
+
+            <div class="detail-desc" th:text="${novel.description}">简介</div>
+
+            <div class="detail-actions">
+                <!-- 继续阅读: 有进度时优先展示 -->
+                <a class="btn btn-warning"
+                   th:if="${progressNo != null}"
+                   th:href="@{/novels/{id}/chapters/{no}(id=${novel.id},no=${progressNo})}">
+                    ▶ 继续阅读(第 <span th:text="${progressNo}">1</span> 章)
+                </a>
+
+                <!-- 无进度时: 立即阅读(从第一章开始) -->
+                <a class="btn btn-primary"
+                   th:if="${progressNo == null and !#lists.isEmpty(chapters)}"
+                   th:href="@{/novels/{id}/chapters/{no}(id=${novel.id},no=${chapters[chapters.size()-1].chapterNo})}">
+                    ▶ 立即阅读
+                </a>
+
+                <!-- 有进度时: 提供从头阅读 -->
+                <a class="btn btn-outline"
+                   th:if="${progressNo != null and !#lists.isEmpty(chapters)}"
+                   th:href="@{/novels/{id}/chapters/{no}(id=${novel.id},no=${chapters[chapters.size()-1].chapterNo})}">
+                    从头阅读
+                </a>
+
+                <!-- 已登录: 书架状态 -->
+                <form sec:authorize="isAuthenticated()" th:if="${inBookshelf}"
+                      th:action="@{/bookshelf/remove}" method="post" style="display:inline">
+                    <input type="hidden" name="novelId" th:value="${novel.id}">
+                    <button type="submit" class="btn btn-outline">✓ 已在书架 · 移出</button>
+                </form>
+                <form sec:authorize="isAuthenticated()" th:unless="${inBookshelf}"
+                      th:action="@{/bookshelf/add}" method="post" style="display:inline">
+                    <input type="hidden" name="novelId" th:value="${novel.id}">
+                    <button type="submit" class="btn btn-success">＋ 加入书架</button>
+                </form>
+                <!-- 未登录: 引导登录 -->
+                <a sec:authorize="!isAuthenticated()"
+                   class="btn btn-outline"
+                   th:href="@{/login}">登录后加入书架</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="chapter-section">
+        <h2>📑 章节目录</h2>
+        <ul class="chapter-list" th:if="${!#lists.isEmpty(chapters)}">
+            <li th:each="ch : ${chapters}">
+                <a th:href="@{/novels/{id}/chapters/{no}(id=${novel.id},no=${ch.chapterNo})}"
+                   th:classappend="${progressNo != null and progressNo == ch.chapterNo} ? 'current' : ''">
+                    <span class="ch-no" th:text="'第 ' + ch.chapterNo + ' 章'">第 1 章</span>
+                    <span th:text="${ch.title}">标题</span>
+                </a>
+            </li>
+        </ul>
+        <div class="empty" th:if="${#lists.isEmpty(chapters)}">该书暂无章节。</div>
+    </div>
+
+    <div class="comment-section">
+        <h2>💬 评论 <span th:text="'(' + ${commentCount} + ')'">(0)</span></h2>
+
+        <div class="flash ok" th:if="${commentMessage}" th:text="${commentMessage}">ok</div>
+        <div class="flash err" th:if="${commentError}" th:text="${commentError}">err</div>
+
+        <form class="comment-form" sec:authorize="isAuthenticated()"
+              th:action="@{/novels/{id}/comments(id=${novel.id})}" method="post">
+            <textarea name="content" maxlength="500" placeholder="写下你的看法...(最多 500 字)" required></textarea>
+            <button type="submit" class="btn btn-primary">发表评论</button>
+        </form>
+        <div class="comment-login-tip" sec:authorize="!isAuthenticated()">
+            <a th:href="@{/login}">登录</a> 后即可发表评论。
+        </div>
+
+        <ul class="comment-list" th:if="${!#lists.isEmpty(comments)}">
+            <li class="comment-item" th:each="c : ${comments}">
+                <div class="comment-main">
+                    <div class="comment-head">
+                        <span class="author" th:text="${c.username}">用户</span>
+                        <span th:if="${c.createdAt != null}"
+                              th:text="' · ' + ${#temporals.format(c.createdAt, 'yyyy-MM-dd HH:mm')}"> · 时间</span>
+                    </div>
+                    <div class="comment-body" th:text="${c.content}">内容</div>
+                </div>
+                <form sec:authorize="isAuthenticated()" th:if="${c.owner}"
+                      th:action="@{/novels/{id}/comments/{cid}/delete(id=${novel.id},cid=${c.id})}"
+                      method="post" style="display:inline">
+                    <button type="submit" class="btn-del">删除</button>
+                </form>
+            </li>
+        </ul>
+        <div class="empty" th:if="${#lists.isEmpty(comments)}">还没有评论,来抢沙发吧~</div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

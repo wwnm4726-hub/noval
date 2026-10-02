@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!--/* 公共片段: navbar / footer */-->
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<div th:fragment="navbar" class="navbar">
+    <div class="nav-left">
+        <a th:href="@{/}" class="brand">📚 小说阅读平台</a>
+        <a th:href="@{/?category=玄幻}">玄幻</a>
+        <a th:href="@{/?category=都市}">都市</a>
+        <a th:href="@{/?category=修真}">修真</a>
+        <a th:href="@{/?category=历史}">历史</a>
+        <a th:href="@{/?category=科幻}">科幻</a>
+    </div>
+    <div class="nav-right">
+        <span sec:authorize="isAuthenticated()">
+            <a th:href="@{/bookshelf}">📖 我的书架</a>
+            <a th:href="@{/history}">🕘 阅读历史</a>
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}">⚙️ 后台管理</a>
+            <span class="user">
+                欢迎,<span sec:authentication="name">user</span>
+            </span>
+            <form th:action="@{/logout}" method="post" style="display:inline">
+                <button type="submit" class="btn-link">登出</button>
+            </form>
+        </span>
+        <span sec:authorize="!isAuthenticated()">
+            <a th:href="@{/login}">登录</a>
+            <a th:href="@{/register}">注册</a>
+        </span>
+    </div>
+</div>
+
+<div th:fragment="footer" class="footer">
+    <p>© 2024 小说阅读平台 · Powered by Spring Boot 3 &amp; Thymeleaf</p>
+</div>
+
+</body>
+</html>

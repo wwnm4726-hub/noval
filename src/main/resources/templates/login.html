@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>登录 - 小说阅读平台</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
+        .navbar { background: #2c3e50; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: #fff; text-decoration: none; margin-left: 12px; }
+        .container { max-width: 420px; margin: 60px auto; background: #fff; padding: 32px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+        h2 { margin-top: 0; }
+        label { display: block; margin-top: 12px; font-weight: bold; }
+        input[type=text], input[type=password] { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; margin-top: 20px; padding: 10px; background: #2c3e50; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #1a252f; }
+        .msg { margin-top: 12px; padding: 8px; border-radius: 4px; }
+        .msg.error { background: #fde2e2; color: #c0392b; }
+        .msg.success { background: #dff5e1; color: #27ae60; }
+        .links { margin-top: 16px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <div><a th:href="@{/}">📚 小说阅读平台</a></div>
+    <div>
+        <a th:href="@{/login}">登录</a>
+        <a th:href="@{/register}">注册</a>
+    </div>
+</div>
+
+<div class="container">
+    <h2>账号登录</h2>
+    <div th:if="${param.registered}" class="msg success">
+        注册成功!请使用账号登录。
+        <span th:if="${registeredUsername != null}">
+            (用户名: <span th:text="${registeredUsername}"></span>)
+        </span>
+    </div>
+    <div th:if="${param.error}" class="msg error">用户名或密码错误,请重试。</div>
+    <div th:if="${param.logout}" class="msg success">您已成功登出。</div>
+
+    <form th:action="@{/login}" method="post">
+        <label for="username">用户名</label>
+        <input type="text" id="username" name="username" required autofocus>
+
+        <label for="password">密码</label>
+        <input type="password" id="password" name="password" required>
+
+        <button type="submit">登 录</button>
+    </form>
+
+    <div class="links">
+        还没有账号? <a th:href="@{/register}">立即注册</a>
+    </div>
+</div>
+</body>
+</html>
