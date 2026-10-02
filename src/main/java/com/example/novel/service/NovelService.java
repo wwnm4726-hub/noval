@@ -1,5 +1,6 @@
 package com.example.novel.service;
 
+import com.example.novel.dto.PageResult;
 import com.example.novel.entity.Novel;
 import com.example.novel.repository.BookshelfRepository;
 import com.example.novel.repository.NovelRepository;
@@ -80,6 +81,16 @@ public class NovelService {
             return novelRepository.findByCategoryOrderByViewCountDesc(category);
         }
         return novelRepository.findByCategoryOrderByCreatedAtDesc(category);
+    }
+
+    /**
+     * 分页后的列表(保留分类/关键词/排序筛选),页码越界时自动收敛到有效范围。
+     */
+    public PageResult<Novel> page(String category, String keyword, String sort, int page, int size) {
+        List<Novel> all = (keyword != null && !keyword.isBlank())
+                ? search(keyword, sort)
+                : listByCategory(category, sort);
+        return PageResult.of(all, page, size);
     }
 
     public List<String> allCategories() {

@@ -40,16 +40,16 @@ public class ApiNovelController {
         this.chapterService = chapterService;
     }
 
-    /** GET /api/novels?category=&keyword=&sort=new|hot */
+    /** GET /api/novels?category=&keyword=&sort=new|hot&page=&size= */
     @GetMapping
     public List<NovelSummary> list(@RequestParam(value = "category", required = false) String category,
                                    @RequestParam(value = "keyword", required = false) String keyword,
-                                   @RequestParam(value = "sort", required = false, defaultValue = "new") String sort) {
-        List<Novel> novels = (keyword != null && !keyword.isBlank())
-                ? novelService.search(keyword, sort)
-                : novelService.listByCategory(category, sort);
-        log.debug("API 小说列表: category={}, keyword={}, sort={}, size={}",
-                category, keyword, sort, novels.size());
+                                   @RequestParam(value = "sort", required = false, defaultValue = "new") String sort,
+                                   @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+                                   @RequestParam(value = "size", required = false, defaultValue = "12") int size) {
+        List<Novel> novels = novelService.page(category, keyword, sort, page, size).items();
+        log.debug("API 小说列表: category={}, keyword={}, sort={}, page={}, size={}, 返回={}",
+                category, keyword, sort, page, size, novels.size());
         return novels.stream().map(this::toSummary).toList();
     }
 

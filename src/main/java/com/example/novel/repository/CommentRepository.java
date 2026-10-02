@@ -23,6 +23,9 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     long countByUserId(Long userId);
 
+    /** 某用户发表的全部评论(含其回复),用于删除用户时清理。 */
+    List<Comment> findByUserId(Long userId);
+
     Optional<Comment> findByIdAndUserId(Long id, Long userId);
 
     long deleteByNovelId(Long novelId);

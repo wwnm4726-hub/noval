@@ -3,10 +3,16 @@ package com.example.novel.controller;
 import com.example.novel.dto.NovelSummary;
 import com.example.novel.entity.Chapter;
 import com.example.novel.entity.Novel;
+import com.example.novel.entity.User;
+import com.example.novel.service.AdminUserService;
 import com.example.novel.service.ChapterService;
+import com.example.novel.service.CurrentUserService;
 import com.example.novel.service.NovelService;
+import com.example.novel.service.StatisticsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +28,7 @@ import java.util.List;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
- * 运营后台(页面): 小说 / 章节的增删改查。
+ * 运营后台(页面): 小说 / 章节的增删改查 + 数据概览 + 用户治理。
  * 访问控制由 SecurityConfig 统一以 ROLE_ADMIN 拦截。
  */
 @Controller
@@ -33,15 +39,72 @@ public class AdminController {
 
     private final NovelService novelService;
     private final ChapterService chapterService;
+    private final StatisticsService statisticsService;
+    private final AdminUserService adminUserService;
+    private final CurrentUserService currentUserService;
 
-    public AdminController(NovelService novelService, ChapterService chapterService) {
+    public AdminController(NovelService novelService,
+                           ChapterService chapterService,
+                           StatisticsService statisticsService,
+                           AdminUserService adminUserService,
+                           CurrentUserService currentUserService) {
         this.novelService = novelService;
         this.chapterService = chapterService;
+        this.statisticsService = statisticsService;
+        this.adminUserService = adminUserService;
+        this.currentUserService = currentUserService;
     }
 
     @GetMapping
     public String home() {
         return "redirect:/admin/novels";
+    }
+
+    // ---------------- 数据概览 ----------------
+
+    @GetMapping("/dashboard")
+    public String dashboard(Model model) {
+        model.addAttribute("stats", statisticsService.dashboard());
+        return "admin/dashboard";
+    }
+
+    // ---------------- 用户治理 ----------------
+
+    @GetMapping("/users")
+    public String users(@AuthenticationPrincipal UserDetails principal, Model model) {
+        User me = currentUserService.find(principal);
+        model.addAttribute("users", adminUserService.listUsers());
+        model.addAttribute("currentUserId", me == null ? null : me.getId());
+        return "admin/users";
+    }
+
+    @PostMapping("/users/{id}/role")
+    public String changeRole(@PathVariable Long id,
+                             @RequestParam String role,
+                             @AuthenticationPrincipal UserDetails principal,
+                             RedirectAttributes ra) {
+        User me = currentUserService.require(principal);
+        try {
+            adminUserService.changeRole(me.getId(), id, role);
+            ra.addFlashAttribute("message", "已调整用户角色");
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/admin/users";
+    }
+
+    @PostMapping("/users/{id}/delete")
+    public String deleteUser(@PathVariable Long id,
+                             @AuthenticationPrincipal UserDetails principal,
+                             RedirectAttributes ra) {
+        User me = currentUserService.require(principal);
+        try {
+            adminUserService.deleteUser(me.getId(), id);
+            ra.addFlashAttribute("message", "已删除用户及其互动数据");
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/admin/users";
     }
 
     // ---------------- 小说 ----------------

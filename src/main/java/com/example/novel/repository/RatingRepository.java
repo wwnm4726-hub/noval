@@ -20,4 +20,7 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
     Double averageScoreByNovelId(@Param("novelId") Long novelId);
 
     long deleteByNovelId(Long novelId);
+
+    /** 清理某用户的全部评分(删除用户时使用)。 */
+    long deleteByUserId(Long userId);
 }

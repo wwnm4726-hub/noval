@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>数据概览 - 运营后台</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f5f5; margin: 0; color: #333; }
+        .navbar { background: #2c3e50; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: #fff; text-decoration: none; margin: 0 8px; }
+        .nav-left .brand { font-size: 18px; font-weight: bold; margin-right: 20px; }
+        .btn-link, button.btn-link { background: none; border: none; color: #fff; cursor: pointer; font-size: 14px; }
+        .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+
+        .header-bar { background: #fff; padding: 20px 24px; border-radius: 8px; margin-bottom: 16px;
+                      box-shadow: 0 2px 6px rgba(0,0,0,.06); display: flex; justify-content: space-between; align-items: center; }
+        .header-bar h1 { margin: 0; font-size: 22px; color: #2c3e50; }
+        .admin-nav a { color: #3498db; text-decoration: none; margin-left: 14px; font-size: 14px; }
+        .admin-nav a:hover { text-decoration: underline; }
+
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+        .stat-card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 6px rgba(0,0,0,.06);
+                     text-align: center; }
+        .stat-card .icon { font-size: 32px; }
+        .stat-card .value { font-size: 32px; font-weight: bold; color: #2c3e50; margin: 8px 0 4px; }
+        .stat-card .label { color: #7f8c8d; font-size: 14px; }
+        .footer { text-align: center; padding: 24px; color: #95a5a6; font-size: 13px; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container">
+    <div class="header-bar">
+        <h1>📊 数据概览</h1>
+        <span class="admin-nav">
+            <a th:href="@{/admin/novels}">小说管理</a>
+            <a th:href="@{/admin/users}">用户管理</a>
+        </span>
+    </div>
+
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="icon">📚</div>
+            <div class="value" th:text="${stats.novelCount}">0</div>
+            <div class="label">小说总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="icon">📑</div>
+            <div class="value" th:text="${stats.chapterCount}">0</div>
+            <div class="label">章节总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="icon">👥</div>
+            <div class="value" th:text="${stats.userCount}">0</div>
+            <div class="label">注册用户数</div>
+        </div>
+        <div class="stat-card">
+            <div class="icon">💬</div>
+            <div class="value" th:text="${stats.commentCount}">0</div>
+            <div class="label">评论总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="icon">⭐</div>
+            <div class="value" th:text="${stats.ratingCount}">0</div>
+            <div class="label">评分次数</div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

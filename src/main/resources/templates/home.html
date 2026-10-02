@@ -51,6 +51,11 @@
 
         .empty { text-align: center; padding: 60px 20px; color: #7f8c8d; }
 
+        .pager { display: flex; justify-content: center; align-items: center; gap: 16px; margin: 28px 0 0; font-size: 14px; }
+        .pager a { color: #2980b9; text-decoration: none; padding: 6px 16px; border: 1px solid #bdc3c7; border-radius: 4px; background: #fff; }
+        .pager a:hover { background: #ecf0f1; }
+        .pager .pager-info { color: #7f8c8d; }
+
         .footer { text-align: center; padding: 24px; color: #95a5a6; font-size: 13px; margin-top: 40px; }
     </style>
 </head>
@@ -95,7 +100,7 @@
             <span th:case="'collect'">📖 收藏最多</span>
             <span th:case="*">🆕 最新上架</span>
         </span>
-        <span class="count" th:text="'共 ' + ${novels.size()} + ' 本'">共 0 本</span>
+        <span class="count" th:text="'共 ' + ${total} + ' 本'">共 0 本</span>
     </h2>
 
     <div th:if="${#lists.isEmpty(novels)}" class="empty">
@@ -122,6 +127,14 @@
                 </div>
             </a>
         </div>
+    </div>
+
+    <div class="pager" th:if="${totalPages > 1}">
+        <a th:if="${hasPrev}"
+           th:href="@{/(category=${activeCategory},keyword=${keyword},sort=${sort},page=${page - 1},size=${size})}">← 上一页</a>
+        <span class="pager-info" th:text="'第 ' + ${page} + ' / ' + ${totalPages} + ' 页'">第 1 / 1 页</span>
+        <a th:if="${hasNext}"
+           th:href="@{/(category=${activeCategory},keyword=${keyword},sort=${sort},page=${page + 1},size=${size})}">下一页 →</a>
     </div>
 </div>
 

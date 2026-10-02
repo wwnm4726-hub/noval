@@ -18,4 +18,7 @@ public interface ReadingProgressRepository extends JpaRepository<ReadingProgress
     long countByUserId(Long userId);
 
     long deleteByNovelId(Long novelId);
+
+    /** 清理某用户的全部阅读进度(删除用户时使用)。 */
+    long deleteByUserId(Long userId);
 }

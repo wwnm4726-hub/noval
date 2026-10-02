@@ -1,13 +1,12 @@
 package com.example.novel.controller;
 
+import com.example.novel.dto.PageResult;
 import com.example.novel.entity.Novel;
 import com.example.novel.service.NovelService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
 
 @Controller
 public class HomeController {
@@ -22,18 +21,24 @@ public class HomeController {
     public String index(@RequestParam(value = "category", required = false) String category,
                         @RequestParam(value = "keyword", required = false) String keyword,
                         @RequestParam(value = "sort", required = false, defaultValue = "new") String sort,
+                        @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+                        @RequestParam(value = "size", required = false, defaultValue = "12") int size,
                         Model model) {
-        List<Novel> novels;
+        PageResult<Novel> result = novelService.page(category, keyword, sort, page, size);
         if (keyword != null && !keyword.isBlank()) {
-            novels = novelService.search(keyword, sort);
             model.addAttribute("keyword", keyword);
             model.addAttribute("activeCategory", null);
         } else {
-            novels = novelService.listByCategory(category, sort);
             model.addAttribute("activeCategory", category);
         }
 
-        model.addAttribute("novels", novels);
+        model.addAttribute("novels", result.items());
+        model.addAttribute("total", result.total());
+        model.addAttribute("page", result.page());
+        model.addAttribute("size", result.size());
+        model.addAttribute("totalPages", result.totalPages());
+        model.addAttribute("hasPrev", result.hasPrev());
+        model.addAttribute("hasNext", result.hasNext());
         model.addAttribute("categories", novelService.allCategories());
         model.addAttribute("sort", sort);
         return "home";

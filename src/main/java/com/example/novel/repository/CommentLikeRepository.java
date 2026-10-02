@@ -20,6 +20,9 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> 
 
     long deleteByCommentId(Long commentId);
 
+    /** 清理某用户给出的全部点赞(删除用户时使用)。 */
+    long deleteByUserId(Long userId);
+
     /** 清理某条评论下所有回复的点赞(删除顶层评论时使用)。 */
     @Modifying
     @Query("delete from CommentLike cl where cl.comment.parent.id = :parentId")

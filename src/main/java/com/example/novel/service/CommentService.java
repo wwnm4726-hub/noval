@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -187,6 +188,45 @@ public class CommentService {
         likeRepository.deleteByChapterId(chapterId);
         long removed = commentRepository.deleteByChapterId(chapterId);
         log.info("清理章节 {} 的评论 {} 条", chapterId, removed);
+    }
+
+    /**
+     * 删除某用户发表的全部评论及其相关点赞与回复(删除用户时调用)。
+     * 先清理点赞,再删回复,最后删顶层评论,避免外键约束冲突。
+     */
+    public void deleteByUser(Long userId) {
+        List<Comment> mine = commentRepository.findByUserId(userId);
+        LinkedHashSet<Long> replyIds = new LinkedHashSet<>();
+        LinkedHashSet<Long> topIds = new LinkedHashSet<>();
+        for (Comment c : mine) {
+            if (c.getParent() != null) {
+                replyIds.add(c.getId());
+            } else {
+                topIds.add(c.getId());
+            }
+            // 该评论下他人/本人的回复也需一并清理
+            for (Comment r : commentRepository.findByParentIdOrderByCreatedAtAsc(c.getId())) {
+                replyIds.add(r.getId());
+            }
+        }
+        // 该用户给出的全部点赞
+        likeRepository.deleteByUserId(userId);
+        // 待删评论上所有点赞
+        for (Long id : replyIds) {
+            likeRepository.deleteByCommentId(id);
+        }
+        for (Long id : topIds) {
+            likeRepository.deleteByCommentId(id);
+            commentRepository.deleteByParentId(id);
+        }
+        // 先删回复再删顶层,满足自关联外键顺序
+        for (Long id : replyIds) {
+            commentRepository.deleteById(id);
+        }
+        for (Long id : topIds) {
+            commentRepository.deleteById(id);
+        }
+        log.info("清理用户 {} 的评论 {} 条", userId, mine.size());
     }
 
     // ---------------- 内部 ----------------

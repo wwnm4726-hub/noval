@@ -26,4 +26,7 @@ public interface BookshelfRepository extends JpaRepository<Bookshelf, Long> {
     long countByNovelId(Long novelId);
 
     long deleteByNovelId(Long novelId);
+
+    /** 清理某用户的全部书架记录(删除用户时使用)。 */
+    long deleteByUserId(Long userId);
 }
